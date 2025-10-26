@@ -22,12 +22,12 @@ const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProp
         />
       )}
       {!isOwn && !showAvatar && <div className="w-8" />}
-      
+
       <div className={cn("flex flex-col", isOwn ? "items-end" : "items-start")}>
         {!isOwn && showAvatar && (
           <span className="text-sm font-medium mb-1 px-2">{sender?.name}</span>
         )}
-        
+
         <div
           className={cn(
             "rounded-2xl px-4 py-2 max-w-md break-words",
@@ -37,7 +37,7 @@ const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProp
           )}
         >
           {message.content && <p className="text-sm">{message.content}</p>}
-          
+
           {message.fileUrl && (
             <div className="mt-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
               <div className="flex-1">
@@ -54,7 +54,7 @@ const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProp
               </Button>
             </div>
           )}
-          
+
           <div className={cn(
             "flex items-center gap-1 mt-1",
             isOwn ? "justify-end" : "justify-start"
@@ -72,7 +72,7 @@ const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProp
           </div>
         </div>
       </div>
-      
+
       {isOwn && showAvatar && (
         <img
           src={sender?.avatar}

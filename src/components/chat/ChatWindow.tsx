@@ -255,7 +255,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4 max-w-4xl mx-auto">
+        <div className="space-y-4 mx-5">
           {activeChat.messages.map((msg, idx) => (
             <MessageBubble
               key={msg.id}

@@ -99,7 +99,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
         </div>
 
         <Tabs defaultValue="chats" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2 mx-4 my-2">
+          <TabsList className="grid  grid-cols-2 mx-4 my-2">
             <TabsTrigger value="chats">Chats</TabsTrigger>
             <TabsTrigger value="users">
               <Users className="w-4 h-4 mr-2" />
