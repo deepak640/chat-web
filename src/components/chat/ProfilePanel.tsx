@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useChatContext } from '@/context/ChatContext';
 import { X, Mail, Phone, Calendar, MessageSquare, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { useCreateChat } from '@/services/chat.service';
 
 interface ProfilePanelProps {
   userId: string;
@@ -12,8 +14,11 @@ interface ProfilePanelProps {
 }
 
 const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
-  const { users, currentUser, createChat } = useChatContext();
-  const user = userId === currentUser?.id ? currentUser : users.find(u => u.id === userId);
+  const { users } = useSelector((state: RootState) => state.chat);
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const createChatMutation = useCreateChat();
+
+  const user = userId === currentUser?.id ? currentUser : users.find((u: any) => u.id === userId);
 
   if (!user) return null;
 
@@ -21,14 +26,18 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
 
   const handleStartChat = () => {
     if (!isOwnProfile) {
-      createChat([user.id]);
-      onClose();
+      createChatMutation.mutate([user.id], {
+        onSuccess: () => {
+          onClose();
+        },
+      });
     }
   };
 
   const getLastSeenText = () => {
     if (user.status === 'online') return 'Online now';
-    const diff = Date.now() - user.lastSeen.getTime();
+    if (!user.lastSeen) return 'Unknown';
+    const diff = Date.now() - new Date(user.lastSeen).getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
@@ -74,9 +83,8 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
           {/* Action Buttons */}
           {!isOwnProfile && (
             <div className="flex gap-2">
-              <Button onClick={handleStartChat} className="flex-1">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Message
+              <Button onClick={handleStartChat} className="flex-1" disabled={createChatMutation.isPending}>
+                {createChatMutation.isPending ? 'Starting chat...' : <><MessageSquare className="w-4 h-4 mr-2" />Message</>}
               </Button>
             </div>
           )}

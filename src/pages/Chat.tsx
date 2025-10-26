@@ -1,15 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useChatContext } from '@/context/ChatContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatSidebar from '@/components/chat/ChatSidebar';
 import ChatWindow from '@/components/chat/ChatWindow';
 import ProfilePanel from '@/components/chat/ProfilePanel';
-import { useState } from 'react';
 
 const Chat = () => {
   const navigate = useNavigate();
-  const { currentUser } = useChatContext();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [showProfile, setShowProfile] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
 

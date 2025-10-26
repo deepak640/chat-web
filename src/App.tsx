@@ -1,33 +1,31 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ChatProvider } from "./context/ChatContext";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import RedirectIfAuthenticated from "./components/common/RedirectIfAuthenticated";
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ChatProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Chat />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ChatProvider>
-  </QueryClientProvider>
+  <TooltipProvider>
+    <Toaster />
+    <Sonner />
+    <BrowserRouter>
+      <Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Chat />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+        <Route element={<RedirectIfAuthenticated />}>
+          <Route path="/auth" element={<Auth />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  </TooltipProvider>
 );
 
 export default App;

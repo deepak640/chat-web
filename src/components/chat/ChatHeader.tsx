@@ -1,26 +1,47 @@
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, Search, Menu, LogOut, User } from 'lucide-react';
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Bell, MessageSquare, Search, Menu, LogOut, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { useChatContext } from '@/context/ChatContext';
-import { useNavigate } from 'react-router-dom';
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { useDispatch, useSelector } from "react-redux";
+import { useChatContext } from "@/context/ChatContext";
+import { useNavigate } from "react-router-dom";
+import { RootState } from "@/store/store";
+import { logout } from "@/store/slices/authSlice";
 
 const ChatHeader = () => {
-  const { notifications, currentUser, logout } = useChatContext();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const [searchQuery, setSearchQuery] = useState("");
+  // const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = 0;
+
+  const notifications = [
+    {
+      id: "1",
+      title: "New Message",
+      content: "You have a new message from John.",
+    },
+    {
+      id: "2",
+      title: "Group Invite",
+      content: 'You were added to the group "Project Team".',
+    },
+    { id: "3", title: "Mention", content: "Alice mentioned you in a chat." },
+  ];
 
   const handleLogout = () => {
-    logout();
-    navigate('/auth');
+    dispatch(logout());
+    console.log("User logged out");
+    navigate("/auth");
   };
 
   return (
@@ -50,8 +71,8 @@ const ChatHeader = () => {
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
+                <Badge
+                  variant="destructive"
                   className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 text-xs"
                 >
                   {unreadCount}
@@ -65,10 +86,15 @@ const ChatHeader = () => {
                 No notifications
               </div>
             ) : (
-              notifications.slice(0, 5).map(notif => (
-                <DropdownMenuItem key={notif.id} className="flex flex-col items-start p-3">
+              notifications.slice(0, 5).map((notif) => (
+                <DropdownMenuItem
+                  key={notif.id}
+                  className="flex flex-col items-start p-3"
+                >
                   <div className="font-medium">{notif.title}</div>
-                  <div className="text-sm text-muted-foreground">{notif.content}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {notif.content}
+                  </div>
                 </DropdownMenuItem>
               ))
             )}
@@ -86,7 +112,7 @@ const ChatHeader = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
               <User className="w-4 h-4 mr-2" />
               My Profile
             </DropdownMenuItem>

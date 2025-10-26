@@ -11,8 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChatContext } from '@/context/ChatContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { useCreateChat } from '@/services/chat.service';
 
 interface CreateChatDialogProps {
   open: boolean;
@@ -20,24 +22,36 @@ interface CreateChatDialogProps {
 }
 
 const CreateChatDialog = ({ open, onOpenChange }: CreateChatDialogProps) => {
-  const { users, createChat } = useChatContext();
+  // const { users } = useSelector((state: RootState) => state.chat);
+  const users = [
+    { id: 'u1', name: 'Alice', avatar: 'https://i.pravatar.cc/40?img=1', email: 'alice@example.com' },
+    { id: 'u2', name: 'Bob', avatar: 'https://i.pravatar.cc/40?img=2', email: 'bob@example.com' },
+    { id: 'u3', name: 'Charlie', avatar: 'https://i.pravatar.cc/40?img=3', email: 'charlie@example.com' },
+  ];
+  const createChatMutation = useCreateChat();
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [groupName, setGroupName] = useState('');
 
   const handleCreateDirect = () => {
     if (selectedUsers.length === 1) {
-      createChat(selectedUsers);
-      onOpenChange(false);
-      setSelectedUsers([]);
+      createChatMutation.mutate({ participants: selectedUsers }, {
+        onSuccess: () => {
+          onOpenChange(false);
+          setSelectedUsers([]);
+        }
+      });
     }
   };
 
   const handleCreateGroup = () => {
     if (selectedUsers.length >= 2 && groupName.trim()) {
-      createChat(selectedUsers, true, groupName);
-      onOpenChange(false);
-      setSelectedUsers([]);
-      setGroupName('');
+      createChatMutation.mutate({ participants: selectedUsers, isGroup: true, name: groupName }, {
+        onSuccess: () => {
+          onOpenChange(false);
+          setSelectedUsers([]);
+          setGroupName('');
+        }
+      });
     }
   };
 
@@ -68,7 +82,7 @@ const CreateChatDialog = ({ open, onOpenChange }: CreateChatDialogProps) => {
           <TabsContent value="direct" className="space-y-4">
             <ScrollArea className="h-64">
               <div className="space-y-2">
-                {users.map(user => (
+                {users.map((user: any) => (
                   <div
                     key={user.id}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 cursor-pointer"
@@ -93,10 +107,10 @@ const CreateChatDialog = ({ open, onOpenChange }: CreateChatDialogProps) => {
             </ScrollArea>
             <Button
               onClick={handleCreateDirect}
-              disabled={selectedUsers.length !== 1}
+              disabled={selectedUsers.length !== 1 || createChatMutation.isPending}
               className="w-full"
             >
-              Start Chat
+              {createChatMutation.isPending ? 'Starting chat...' : 'Start Chat'}
             </Button>
           </TabsContent>
 
@@ -115,7 +129,7 @@ const CreateChatDialog = ({ open, onOpenChange }: CreateChatDialogProps) => {
               <Label>Select Members (minimum 2)</Label>
               <ScrollArea className="h-48">
                 <div className="space-y-2">
-                  {users.map(user => (
+                  {users.map((user: any) => (
                     <div
                       key={user.id}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 cursor-pointer"
@@ -139,10 +153,10 @@ const CreateChatDialog = ({ open, onOpenChange }: CreateChatDialogProps) => {
 
             <Button
               onClick={handleCreateGroup}
-              disabled={selectedUsers.length < 2 || !groupName.trim()}
+              disabled={selectedUsers.length < 2 || !groupName.trim() || createChatMutation.isPending}
               className="w-full"
             >
-              Create Group ({selectedUsers.length} members)
+              {createChatMutation.isPending ? 'Creating group...' : `Create Group (${selectedUsers.length} members)`}
             </Button>
           </TabsContent>
         </Tabs>

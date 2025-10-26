@@ -1,35 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useChatContext } from '@/context/ChatContext';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import { useUpdateProfile } from '@/services/profile.service';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { currentUser, updateProfile } = useChatContext();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const { toast } = useToast();
+  const updateProfileMutation = useUpdateProfile();
 
   const [formData, setFormData] = useState({
-    name: currentUser?.name || '',
-    email: currentUser?.email || '',
-    phone: currentUser?.phone || '',
-    dob: currentUser?.dob || '',
-    bio: currentUser?.bio || '',
+    name: '',
+    email: '',
+    phone: '',
+    dob: '',
+    bio: '',
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        dob: currentUser.dob || '',
+        bio: currentUser.bio || '',
+      });
+    }
+  }, [currentUser]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile(formData);
-    toast({
-      title: 'Profile updated',
-      description: 'Your profile has been saved successfully.',
+    updateProfileMutation.mutate(formData, {
+      onSuccess: () => {
+        toast({
+          title: 'Profile updated',
+          description: 'Your profile has been saved successfully.',
+        });
+        navigate('/');
+      },
+      onError: () => {
+        toast({
+          title: 'Error',
+          description: 'Failed to update profile.',
+          variant: 'destructive',
+        });
+      },
     });
-    navigate('/');
   };
 
   return (
@@ -114,9 +139,8 @@ const Profile = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button type="submit" className="flex-1">
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                <Button type="submit" className="flex-1" disabled={updateProfileMutation.isPending}>
+                  {updateProfileMutation.isPending ? 'Saving...' : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
                 </Button>
                 <Button
                   type="button"
