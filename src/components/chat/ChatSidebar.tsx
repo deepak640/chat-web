@@ -1,0 +1,183 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { useChatContext } from '@/context/ChatContext';
+import { MessageSquarePlus, Search, Users } from 'lucide-react';
+import { format } from 'date-fns';
+import CreateChatDialog from './CreateChatDialog';
+import { cn } from '@/lib/utils';
+
+interface ChatSidebarProps {
+  onShowProfile: (userId: string) => void;
+}
+
+const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
+  const { chats, users, currentUser, activeChat, setActiveChat } = useChatContext();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateChat, setShowCreateChat] = useState(false);
+
+  const filteredChats = chats.filter(chat => {
+    const chatName = chat.name || users.find(u => chat.participants.includes(u.id))?.name || '';
+    return chatName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getChatName = (chat: typeof chats[0]) => {
+    if (chat.type === 'group') return chat.name;
+    const otherUser = users.find(u => chat.participants.includes(u.id) && u.id !== currentUser?.id);
+    return otherUser?.name || 'Unknown';
+  };
+
+  const getChatAvatar = (chat: typeof chats[0]) => {
+    if (chat.type === 'group') return chat.avatar;
+    const otherUser = users.find(u => chat.participants.includes(u.id) && u.id !== currentUser?.id);
+    return otherUser?.avatar;
+  };
+
+  const getLastMessagePreview = (chat: typeof chats[0]) => {
+    const lastMsg = chat.lastMessage;
+    if (!lastMsg) return 'No messages yet';
+    if (lastMsg.fileName) return `📎 ${lastMsg.fileName}`;
+    return lastMsg.content;
+  };
+
+  return (
+    <>
+      <aside className="w-full sm:w-80 lg:w-96 border-r border-border bg-card flex flex-col">
+        <div className="p-4 space-y-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Messages</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowCreateChat(true)}
+            >
+              <MessageSquarePlus className="w-5 h-5" />
+            </Button>
+          </div>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        <Tabs defaultValue="chats" className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-2 mx-4 my-2">
+            <TabsTrigger value="chats">Chats</TabsTrigger>
+            <TabsTrigger value="users">
+              <Users className="w-4 h-4 mr-2" />
+              Users
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="chats" className="flex-1 m-0">
+            <ScrollArea className="h-full">
+              <div className="space-y-1 p-2">
+                {filteredChats.map(chat => (
+                  <button
+                    key={chat.id}
+                    onClick={() => setActiveChat(chat)}
+                    className={cn(
+                      "w-full p-3 rounded-lg text-left hover:bg-secondary/50 transition-colors",
+                      activeChat?.id === chat.id && "bg-secondary"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        <img
+                          src={getChatAvatar(chat)}
+                          alt={getChatName(chat)}
+                          className="w-12 h-12 rounded-full"
+                        />
+                        {chat.type === 'direct' && (
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-card rounded-full" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-medium truncate">{getChatName(chat)}</h3>
+                          {chat.lastMessage && (
+                            <span className="text-xs text-muted-foreground">
+                              {format(chat.lastMessage.timestamp, 'HH:mm')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground truncate">
+                            {getLastMessagePreview(chat)}
+                          </p>
+                          {chat.unreadCount > 0 && (
+                            <Badge variant="default" className="ml-2">
+                              {chat.unreadCount}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="users" className="flex-1 m-0">
+            <ScrollArea className="h-full">
+              <div className="space-y-1 p-2">
+                {filteredUsers.map(user => (
+                  <button
+                    key={user.id}
+                    onClick={() => onShowProfile(user.id)}
+                    className="w-full p-3 rounded-lg text-left hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-12 h-12 rounded-full"
+                        />
+                        <div className={cn(
+                          "absolute bottom-0 right-0 w-3 h-3 border-2 border-card rounded-full",
+                          user.status === 'online' && "bg-status-online",
+                          user.status === 'away' && "bg-status-away",
+                          user.status === 'offline' && "bg-status-offline"
+                        )} />
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h3 className="font-medium">{user.name}</h3>
+                        <p className="text-sm text-muted-foreground capitalize">
+                          {user.status}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
+      </aside>
+
+      <CreateChatDialog
+        open={showCreateChat}
+        onOpenChange={setShowCreateChat}
+      />
+    </>
+  );
+};
+
+export default ChatSidebar;

@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -56,6 +57,18 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        chat: {
+          bg: "hsl(var(--chat-bg))",
+          sent: "hsl(var(--chat-bubble-sent))",
+          received: "hsl(var(--chat-bubble-received))",
+          "sent-text": "hsl(var(--chat-bubble-sent-text))",
+          "received-text": "hsl(var(--chat-bubble-received-text))",
+        },
+        status: {
+          online: "hsl(var(--online))",
+          away: "hsl(var(--away))",
+          offline: "hsl(var(--offline))",
         },
       },
       borderRadius: {
