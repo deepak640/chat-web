@@ -70,7 +70,8 @@ const Profile = () => {
     updateProfile(
       { profileData: payload, id: user._id },
       {
-        onSuccess: () => {
+        onSuccess: ({ data }) => {
+          dispatch(updateUser({ photo: data.photo }));
           toast({
             title: "Profile updated",
             description: "Your profile has been saved successfully.",
@@ -86,7 +87,6 @@ const Profile = () => {
         },
       }
     );
-    dispatch(updateUser({ photo: formData.photoURL }));
   };
 
   return (

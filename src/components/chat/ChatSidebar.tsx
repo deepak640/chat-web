@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { MessageSquarePlus, Search, Users } from 'lucide-react';
-import { format } from 'date-fns';
-import CreateChatDialog from './CreateChatDialog';
-import { cn } from '@/lib/utils';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/store/store';
-import { useGetChats, useGetUsers } from '@/services/chat.service';
-import { setChats, setUsers, setActiveChat } from '@/store/slices/chatSlice';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { MessageSquarePlus, Search, Users } from "lucide-react";
+import { format } from "date-fns";
+import CreateChatDialog from "./CreateChatDialog";
+import { cn } from "@/lib/utils";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
+import { useGetChats, useGetUsers } from "@/services/chat.service";
+import { setChats, setUsers, setActiveChat } from "@/store/slices/chatSlice";
+import { useGetUserList } from "@/services/user.service";
 
 interface ChatSidebarProps {
   onShowProfile: (userId: string) => void;
@@ -19,17 +20,19 @@ interface ChatSidebarProps {
 
 const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const dispatch = useDispatch();
-  const { chats, activeChat } = useSelector((state: RootState) => state.chat);
-  const users = [
-    { id: 'u1', name: 'Alice', avatar: 'https://i.pravatar.cc/40?img=1', status: 'online' },
-    { id: 'u2', name: 'Bob', avatar: 'https://i.pravatar.cc/40?img=2', status: 'away' },
-    { id: 'u3', name: 'Charlie', avatar: 'https://i.pravatar.cc/40?img=3', status: 'offline' },
-  ]
+  const { activeChat } = useSelector((state: RootState) => state.chat);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { data: users } = useGetUserList({ userId: user._id });
+
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showCreateChat, setShowCreateChat] = useState(false);
 
-  const { data: chatsData } = useGetChats();
+  const { data: chats } = useGetChats();
+  console.log("🚀 -------------------------------🚀")
+  console.log("🚀 ~ ChatSidebar ~ chats:", chats)
+  console.log("🚀 -------------------------------🚀")
+  const chatsData = null;
   const { data: usersData } = useGetUsers();
 
   useEffect(() => {
@@ -44,30 +47,39 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
     }
   }, [usersData, dispatch]);
 
-  const filteredChats = chats.filter((chat: any) => {
-    const chatName = chat.name || users.find((u: any) => chat.participants.includes(u.id))?.name || '';
-    return chatName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredChats = chats
+    ? chats?.filter((chat: any) => {
+        const chatName =
+          chat.userName ||
+          users.find((u: any) => chat?.participants?.includes(u._id))?.name ||
+          "";
+        return chatName.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+    : [];
 
-  const filteredUsers = users.filter((user: any) =>
+  const filteredUsers = users?.filter((user: any) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getChatName = (chat: any) => {
-    if (chat.type === 'group') return chat.name;
-    const otherUser = users.find((u: any) => chat.participants.includes(u.id) && u.id !== currentUser?.id);
-    return otherUser?.name || 'Unknown';
+    if (chat.type === "group") return chat.userName;
+    const otherUser = users.find(
+      (u: any) => chat.participants?.includes(u._id) && u._id !== currentUser?._id
+    );
+    return otherUser?.name || "Unknown";
   };
 
   const getChatAvatar = (chat: any) => {
-    if (chat.type === 'group') return chat.avatar;
-    const otherUser = users.find((u: any) => chat.participants.includes(u.id) && u.id !== currentUser?.id);
-    return otherUser?.avatar;
+    if (chat.type === "group") return chat.photo;
+    const otherUser = users.find(
+      (u: any) => chat.participants?.includes(u._id) && u._id !== currentUser?._id
+    );
+    return otherUser?.photo;
   };
 
   const getLastMessagePreview = (chat: any) => {
     const lastMsg = chat.lastMessage;
-    if (!lastMsg) return 'No messages yet';
+    if (!lastMsg) return "No messages yet";
     if (lastMsg.fileName) return `📎 ${lastMsg.fileName}`;
     return lastMsg.content;
   };
@@ -86,7 +98,6 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
               <MessageSquarePlus className="w-5 h-5" />
             </Button>
           </div>
-
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -112,11 +123,11 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
               <div className="space-y-1 p-2">
                 {filteredChats.map((chat: any) => (
                   <button
-                    key={chat.id}
+                    key={chat._id}
                     onClick={() => dispatch(setActiveChat(chat))}
                     className={cn(
                       "w-full p-3 rounded-lg text-left hover:bg-secondary/50 transition-colors",
-                      activeChat?.id === chat.id && "bg-secondary"
+                      activeChat?._id === chat._id && "bg-secondary"
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -126,17 +137,22 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
                           alt={getChatName(chat)}
                           className="w-12 h-12 rounded-full"
                         />
-                        {chat.type === 'direct' && (
+                        {chat.type === "direct" && (
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-card rounded-full" />
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium truncate">{getChatName(chat)}</h3>
+                          <h3 className="font-medium truncate">
+                            {getChatName(chat)}
+                          </h3>
                           {chat.lastMessage && (
                             <span className="text-xs text-muted-foreground">
-                              {format(new Date(chat.lastMessage.timestamp), 'HH:mm')}
+                              {format(
+                                new Date(chat.lastMessage.timestamp),
+                                "HH:mm"
+                              )}
                             </span>
                           )}
                         </div>
@@ -161,10 +177,10 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
           <TabsContent value="users" className="flex-1 m-0">
             <ScrollArea className="h-full">
               <div className="space-y-1 p-2">
-                {filteredUsers.map((user: any) => (
+                {filteredUsers?.map((user: any) => (
                   <button
-                    key={user.id}
-                    onClick={() => onShowProfile(user.id)}
+                    key={user._id}
+                    onClick={() => onShowProfile(user._id)}
                     className="w-full p-3 rounded-lg text-left hover:bg-secondary/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -174,12 +190,14 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
                           alt={user.name}
                           className="w-12 h-12 rounded-full"
                         />
-                        <div className={cn(
-                          "absolute bottom-0 right-0 w-3 h-3 border-2 border-card rounded-full",
-                          user.status === 'online' && "bg-status-online",
-                          user.status === 'away' && "bg-status-away",
-                          user.status === 'offline' && "bg-status-offline"
-                        )} />
+                        <div
+                          className={cn(
+                            "absolute bottom-0 right-0 w-3 h-3 border-2 border-card rounded-full",
+                            user.status === "online" && "bg-status-online",
+                            user.status === "away" && "bg-status-away",
+                            user.status === "offline" && "bg-status-offline"
+                          )}
+                        />
                       </div>
 
                       <div className="flex-1">

@@ -19,13 +19,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import MessageBubble from "./MessageBubble";
-import { cn } from "@/lib/utils";
 import { Message } from "@/types/chat";
+import { useSelector } from "react-redux";
+import { useGetUserList } from "@/services/user.service";
 
-interface ChatWindowProps {
-  onShowProfile: (userId: string) => void;
-}
-
+// === Types ===
 interface User {
   id: string;
   name: string;
@@ -33,7 +31,7 @@ interface User {
 }
 
 interface Chat {
-  id: string;
+  _id: string;
   type: "direct" | "group";
   name?: string;
   avatar?: string;
@@ -41,125 +39,109 @@ interface Chat {
   messages: Message[];
 }
 
+interface RootState {
+  chat: {
+    activeChat: Chat | null;
+  };
+}
+
+interface ChatWindowProps {
+  onShowProfile: (userId: string) => void;
+}
+
+// === Component ===
 const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
-  // Dummy users and current user
+  // Mock users (replace with real data later)
   const [users] = useState<User[]>([
     { id: "u1", name: "Alice", avatar: "https://i.pravatar.cc/40?img=1" },
     { id: "u2", name: "Bob", avatar: "https://i.pravatar.cc/40?img=2" },
   ]);
+  const { data: user } = useGetUserList({});
   const currentUser = users[0];
 
-  // Dummy chat state instead of useChatContext
-  const initialChat: Chat = {
-    id: "chat1",
-    type: "direct",
-    participants: ["u1", "u2"],
-    messages: [
-      {
-        id: "m1",
-        senderId: "u2",
-        content: "Hey! This is a dummy chat message.",
-        timestamp: new Date(),
-        read: false,
-      },
-    ],
-  };
-  const [activeChat, setActiveChat] = useState<Chat | null>(initialChat);
+  // Get activeChat from Redux
+  const reduxActiveChat = useSelector(
+    (state: RootState) => state.chat.activeChat
+  );
+  const currentUserId = reduxActiveChat?.participants.find(
+    ({ _id }: any) => _id !== user[0]._id
+  );
 
-  // Dummy operations
-  const sendMessage = (chatId: string, text: string, file?: File) => {
-    if (!activeChat || activeChat.id !== chatId) return;
-    const newMsg: Message = {
-      id: `m${Date.now()}`,
-      senderId: currentUser.id,
-      content: text || undefined,
-      fileName: file?.name,
-      timestamp: new Date(),
-      read: false,
-    };
-    setActiveChat((prev) =>
-      prev ? { ...prev, messages: [...prev.messages, newMsg] } : prev
-    );
-    // For debugging
-    console.log("sendMessage", chatId, text, file?.name);
-  };
+  // Local state synced with Redux
+  const [activeChat, setActiveChat] = useState<Chat | null>(null);
 
-  const deleteChat = (chatId: string) => {
-    if (!activeChat || activeChat.id !== chatId) return;
-    setActiveChat(null);
-    console.log("deleteChat", chatId);
-  };
+  // Sync Redux → Local state
+  useEffect(() => {
+    setActiveChat(reduxActiveChat);
+  }, [reduxActiveChat]);
 
-  const leaveChat = (chatId: string) => {
-    if (!activeChat || activeChat.id !== chatId) return;
-    setActiveChat((prev) =>
-      prev
-        ? {
-            ...prev,
-            participants: prev.participants.filter(
-              (id) => id !== currentUser.id
-            ),
-          }
-        : prev
-    );
-    console.log("leaveChat", chatId);
-  };
-
+  // Input state
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to bottom on messages or chat change
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const timer = setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeChat?.messages, activeChat]);
+
+  // === Dummy Actions (replace with real API/dispatch) ===
+  const sendMessage = (chatId: string, text: string, file?: File) => {
+    if (!activeChat || activeChat._id !== chatId) return;
+
+    const newMsg: Message = {
+      id: `m${Date.now()}`,
+      senderId: currentUserId,
+      content: text || undefined,
+      fileName: file?.name,
+      timestamp: new Date(),
+      read: false,
+    };
+
+    setActiveChat((prev) =>
+      prev ? { ...prev, messages: [...prev.messages, newMsg] } : prev
+    );
+  };
+
+  const deleteChat = (chatId: string) => {
+    if (activeChat?._id === chatId) {
+      setActiveChat(null);
     }
-  }, [activeChat?.messages]);
-
-  if (!activeChat) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-chat-bg">
-        <div className="text-center space-y-4 px-4">
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <Send className="w-12 h-12 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold">Welcome to ChatApp</h2>
-          <p className="text-muted-foreground max-w-md">
-            Select a chat from the sidebar to start messaging, or find users to
-            connect with.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const getChatName = () => {
-    if (activeChat.type === "group") return activeChat.name || "Group";
-    const otherUser = users.find(
-      (u) => activeChat.participants.includes(u.id) && u.id !== currentUser?.id
-    );
-    return otherUser?.name || "Unknown";
   };
 
-  const getChatAvatar = () => {
-    if (activeChat.type === "group") return activeChat.avatar;
-    const otherUser = users.find(
-      (u) => activeChat.participants.includes(u.id) && u.id !== currentUser?.id
-    );
-    return otherUser?.avatar;
-  };
-
-  const getOtherUserId = () => {
-    return users.find(
-      (u) => activeChat.participants.includes(u.id) && u.id !== currentUser?.id
-    )?.id;
-  };
-
-  const handleSend = () => {
-    if ((!message.trim() && !selectedFile) || !currentUser || !activeChat)
+  const leaveChat = (chatId: string) => {
+    if (!activeChat || activeChat._id !== chatId || activeChat.type !== "group")
       return;
 
-    sendMessage(activeChat.id, message, selectedFile || undefined);
+    setActiveChat((prev) =>
+      prev
+        ? {
+            ...prev,
+            participants: prev.participants.filter(
+              ({ _id }: any) => _id !== currentUserId
+            ),
+          }
+        : prev
+    );
+  };
+
+  const getOtherUserId = (): string | null => {
+    if (!activeChat || activeChat.type === "group") return null;
+    return activeChat.participants.find((id) => id !== currentUser.id) || null;
+  };
+
+  // === Handlers ===
+  const handleSend = () => {
+    if (!message.trim() && !selectedFile) return;
+    if (!activeChat) return;
+
+    sendMessage(activeChat._id, message, selectedFile || undefined);
     setMessage("");
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -178,31 +160,50 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   };
 
   const handleDeleteChat = () => {
-    if (activeChat) deleteChat(activeChat.id);
+    if (activeChat) deleteChat(activeChat._id);
   };
 
   const handleLeaveChat = () => {
-    if (activeChat) leaveChat(activeChat.id);
+    if (activeChat) leaveChat(activeChat._id);
   };
 
+  // === Empty State ===
+  if (!activeChat) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-chat-bg">
+        <div className="text-center space-y-4 px-4">
+          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+            <Send className="w-12 h-12 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold">Welcome to ChatApp</h2>
+          <p className="text-muted-foreground max-w-md">
+            Select a chat from the sidebar to start messaging, or find users to
+            connect with.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // === Main Render ===
   return (
     <div className="flex-1 flex flex-col bg-chat-bg">
-      {/* Chat Header */}
+      {/* Header */}
       <div className="h-16 border-b border-border bg-card flex items-center px-4 justify-between shadow-sm">
         <button
           onClick={() => {
-            const userId = getOtherUserId();
+            const userId = user[0]?._id;
             if (userId) onShowProfile(userId);
           }}
           className="flex items-center gap-3 hover:bg-secondary/50 rounded-lg p-2 -ml-2 transition-colors"
         >
           <img
-            src={getChatAvatar()}
-            alt={getChatName()}
-            className="w-10 h-10 rounded-full"
+            src={user[0]?.photo || "https://i.pravatar.cc/40?img=3"}
+            alt={user[0]?.name}
+            className="w-10 h-10 rounded-full object-cover"
           />
           <div className="text-left">
-            <h3 className="font-semibold">{getChatName()}</h3>
+            <h3 className="font-semibold">{user[0]?.name}</h3>
             <p className="text-sm text-muted-foreground">
               {activeChat.type === "group"
                 ? `${activeChat.participants.length} members`
@@ -212,13 +213,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         </button>
 
         <div className="flex items-center gap-2">
-          {/* <Button variant="ghost" size="icon">
-            <Phone className="w-5 h-5" />
-          </Button> */}
-          {/* <Button variant="ghost" size="icon">
-            <Video className="w-5 h-5" />
-          </Button> */}
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -256,22 +250,27 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       {/* Messages */}
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4 mx-5">
-          {activeChat.messages.map((msg, idx) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isOwn={msg.senderId === currentUser?.id}
-              showAvatar={
-                idx === 0 ||
-                activeChat.messages[idx - 1].senderId !== msg.senderId
-              }
-              // sender={users.find(u => u.id === msg.senderId)}
-            />
-          ))}
+          {activeChat?.messages?.length &&
+            activeChat?.messages?.map((msg, idx) => {
+              const prevMsg = activeChat.messages[idx - 1];
+              const showAvatar =
+                idx === 0 || prevMsg?.senderId !== msg.senderId;
+
+              return (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isOwn={msg.senderId === currentUser.id}
+                  showAvatar={showAvatar}
+                  // Optional: pass sender
+                  // sender={users.find(u => u.id === msg.senderId)}
+                />
+              );
+            })}
         </div>
       </ScrollArea>
 
-      {/* Input */}
+      {/* Input Area */}
       <div className="border-t border-border bg-card p-4">
         {selectedFile && (
           <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -290,7 +289,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
           </div>
         )}
 
-        <div className="flex items-end gap-2 max-w-4xl mx-auto">
+        <div className="flex items-end gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -313,7 +312,11 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             className="flex-1"
           />
 
-          <Button onClick={handleSend} size="icon">
+          <Button
+            onClick={handleSend}
+            size="icon"
+            disabled={!message.trim() && !selectedFile}
+          >
             <Send className="w-5 h-5" />
           </Button>
         </div>
