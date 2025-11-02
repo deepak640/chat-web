@@ -19,7 +19,7 @@ export const useSocket = ({
   const socketRef = useRef<Socket | null>(null);
   useEffect(() => {
     if (userId && !socketRef.current) {
-      socketRef.current = io("http://localhost:4000", {
+      socketRef.current = io(SOCKET_URL, {
         query: { userId, conversationId },
         withCredentials: true,
         transports: ["websocket"],
