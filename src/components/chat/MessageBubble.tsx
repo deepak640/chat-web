@@ -8,7 +8,7 @@ interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   showAvatar: boolean;
-  sender?: User;
+  sender?: Partial<User>;
 }
 
 const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProps) => {

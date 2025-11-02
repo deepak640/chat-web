@@ -29,9 +29,6 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const [showCreateChat, setShowCreateChat] = useState(false);
 
   const { data: chats } = useGetChats();
-  console.log("🚀 -------------------------------🚀")
-  console.log("🚀 ~ ChatSidebar ~ chats:", chats)
-  console.log("🚀 -------------------------------🚀")
   const chatsData = null;
   const { data: usersData } = useGetUsers();
 

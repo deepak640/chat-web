@@ -35,6 +35,16 @@ const createChat = async (chatData: {
   return data;
 };
 
+
+const getConversationsById = async (conversationId: string) => {
+  const { data } = await axios.get(
+    `${API_BASE_URL}/messages/${conversationId}`,
+    auth
+  );
+  return data;
+}
+
+
 export const useGetChats = () => {
   return useQuery({
     queryKey: ["chats"],
@@ -56,5 +66,13 @@ export const useCreateChat = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
+  });
+};
+
+export const useGetConversationById = (conversationId: string) => {
+  return useQuery({
+    queryKey: ["conversation", conversationId],
+    queryFn: () => getConversationsById(conversationId).then((res) => res.data),
+    enabled: !!conversationId,
   });
 };

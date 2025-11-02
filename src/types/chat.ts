@@ -1,4 +1,4 @@
-export type UserStatus = 'online' | 'away' | 'offline';
+export type UserStatus = "online" | "away" | "offline";
 
 export interface User {
   id: string;
@@ -13,8 +13,13 @@ export interface User {
 }
 
 export interface Message {
-  id: string;
+  _id: string;
   content: string;
+  sender: {
+    name: string;
+    avatar: string;
+    email: string;
+  };
   senderId: string;
   timestamp: Date;
   read: boolean;
@@ -25,7 +30,7 @@ export interface Message {
 
 export interface Chat {
   id: string;
-  type: 'direct' | 'group';
+  type: "direct" | "group";
   name?: string;
   participants: string[];
   messages: Message[];
@@ -36,7 +41,7 @@ export interface Chat {
 
 export interface Notification {
   id: string;
-  type: 'message' | 'mention' | 'group-invite';
+  type: "message" | "mention" | "group-invite";
   title: string;
   content: string;
   timestamp: Date;
