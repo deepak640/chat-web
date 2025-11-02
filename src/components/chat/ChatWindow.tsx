@@ -110,8 +110,8 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const getOtherUserId = (): string | null => {
     if (!activeChat || activeChat.type === "group") return null;
     return (
-      activeChat.participants.find((p: any) => p._id !== currentUser?._id)
-        ?._id || null
+      activeChat.participants.find((p: any) => p._id !== currentUser?._id) ||
+      null
     );
   };
 
@@ -139,6 +139,9 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         <button
           onClick={() => {
             const otherUserId = getOtherUserId();
+            console.log("🚀 ------------------------------------------🚀");
+            console.log("🚀 ~ ChatWindow ~ otherUserId:", otherUserId);
+            console.log("🚀 ------------------------------------------🚀");
             if (otherUserId) onShowProfile(otherUserId);
           }}
           className="flex items-center gap-3 hover:bg-secondary/50 rounded-lg p-2 -ml-2 transition-colors"

@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { X, Mail, Phone, Calendar, MessageSquare, Clock } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import { useCreateChat } from '@/services/chat.service';
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { X, Mail, Phone, Calendar, MessageSquare, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { useCreateChat } from "@/services/chat.service";
 
 interface ProfilePanelProps {
   userId: string;
@@ -16,33 +16,41 @@ interface ProfilePanelProps {
 const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
   const { users } = useSelector((state: RootState) => state.chat);
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const createChatMutation = useCreateChat();
+  const { mutate: createChat, isPending } = useCreateChat();
 
-  const user = userId === currentUser?.id ? currentUser : users.find((u: any) => u.id === userId);
+  const user =
+    userId === currentUser?._id
+      ? currentUser
+      : users.find((u: any) => u._id === userId);
 
   if (!user) return null;
 
-  const isOwnProfile = user.id === currentUser?.id;
+  const isOwnProfile = user._id === currentUser?.id;
 
   const handleStartChat = () => {
     if (!isOwnProfile) {
-      createChatMutation.mutate([user.id], {
-        onSuccess: () => {
-          onClose();
+      createChat(
+        {
+          participants: [user._id, currentUser?._id],
         },
-      });
+        {
+          onSuccess: () => {
+            onClose();
+          },
+        }
+      );
     }
   };
 
   const getLastSeenText = () => {
-    if (user.status === 'online') return 'Online now';
-    if (!user.lastSeen) return 'Unknown';
+    if (user.status === "online") return "Online now";
+    if (!user.lastSeen) return "Unknown";
     const diff = Date.now() - new Date(user.lastSeen).getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (minutes < 1) return 'Just now';
+    if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
@@ -63,28 +71,43 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="relative">
               <img
-                src={user.avatar}
+                src={user.photo}
                 alt={user.name}
                 className="w-32 h-32 rounded-full"
               />
-              <div className={cn(
-                "absolute bottom-2 right-2 w-6 h-6 border-4 border-card rounded-full",
-                user.status === 'online' && "bg-status-online",
-                user.status === 'away' && "bg-status-away",
-                user.status === 'offline' && "bg-status-offline"
-              )} />
+              <div
+                className={cn(
+                  "absolute bottom-2 right-2 w-6 h-6 border-4 border-card rounded-full",
+                  user.status === "online" && "bg-status-online",
+                  user.status === "away" && "bg-status-away",
+                  user.status === "offline" && "bg-status-offline"
+                )}
+              />
             </div>
             <div>
               <h2 className="text-2xl font-bold">{user.name}</h2>
-              <p className="text-sm text-muted-foreground capitalize">{user.status}</p>
+              <p className="text-sm text-muted-foreground capitalize">
+                {user.status}
+              </p>
             </div>
           </div>
 
           {/* Action Buttons */}
           {!isOwnProfile && (
             <div className="flex gap-2">
-              <Button onClick={handleStartChat} className="flex-1" disabled={createChatMutation.isPending}>
-                {createChatMutation.isPending ? 'Starting chat...' : <><MessageSquare className="w-4 h-4 mr-2" />Message</>}
+              <Button
+                onClick={handleStartChat}
+                className="flex-1"
+                disabled={isPending}
+              >
+                {isPending ? (
+                  "Starting chat..."
+                ) : (
+                  <>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Message
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -94,15 +117,19 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
           {/* Bio */}
           {user.bio && (
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-muted-foreground">About</h3>
+              <h3 className="font-semibold text-sm text-muted-foreground">
+                About
+              </h3>
               <p className="text-sm">{user.bio}</p>
             </div>
           )}
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-sm text-muted-foreground">Contact Information</h3>
-            
+            <h3 className="font-semibold text-sm text-muted-foreground">
+              Contact Information
+            </h3>
+
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -132,8 +159,12 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
                     <Calendar className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">Date of Birth</p>
-                    <p className="font-medium">{format(new Date(user.dob), 'MMMM d, yyyy')}</p>
+                    <p className="text-muted-foreground text-xs">
+                      Date of Birth
+                    </p>
+                    <p className="font-medium">
+                      {format(new Date(user.dob), "MMMM d, yyyy")}
+                    </p>
                   </div>
                 </div>
               )}

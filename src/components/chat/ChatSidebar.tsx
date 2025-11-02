@@ -40,7 +40,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
 
   useEffect(() => {
     if (usersData) {
-      dispatch(setUsers(usersData));
+      dispatch(setUsers(usersData.data));
     }
   }, [usersData, dispatch]);
 
