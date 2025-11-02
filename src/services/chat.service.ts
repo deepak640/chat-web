@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
-const API_BASE_URL = "/v1";
+import { API_BASE_URL } from "./url.service";
 
 const auth = {
   headers: {

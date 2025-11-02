@@ -2,8 +2,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { login as loginAction } from "../store/slices/authSlice";
-const API_BASE_URL = "/v1/users";
+import { API_BASE_URL as BASE_URL } from "./url.service";
 
+const API_BASE_URL = `${BASE_URL}/users`;
 const auth = {
   headers: {
     Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -2,8 +2,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { updateUser } from "../store/slices/authSlice";
+import { API_BASE_URL as BASE_URL } from "./url.service";
 
-const API_BASE_URL = "/v1/users";
+const API_BASE_URL = `${BASE_URL}/users`;
 
 const updateProfile = async ({ profileData, id }: any) => {
   const { data } = await axios.patch(`${API_BASE_URL}/${id}`, profileData);
