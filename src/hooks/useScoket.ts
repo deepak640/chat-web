@@ -1,6 +1,7 @@
 import { SOCKET_URL } from "@/services/url.service";
 import {
   addMessage,
+  updateMessageStatus,
   updateTypingStatus,
   updateUserStatus,
 } from "@/store/slices/chatSlice";
@@ -39,6 +40,14 @@ export const useSocket = ({
       });
       socketRef.current.on("user-status", (data) => {
         dispatch(updateUserStatus(data));
+      });
+      socketRef.current.on("message-seen-update", (data) => {
+        console.log("🚀 ---------------------------🚀")
+        console.log("🚀 ~ useSocket ~ data:", data)
+        console.log("🚀 ---------------------------🚀")
+        dispatch(
+          updateMessageStatus({ messageId: data.messageId, status: data.seen })
+        );
       });
     }
     return () => {

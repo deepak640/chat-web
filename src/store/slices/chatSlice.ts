@@ -54,6 +54,16 @@ const chatSlice = createSlice({
     updateUserStatus: (state, action: PayloadAction<UserStatus>) => {
       state.userStatus = action.payload;
     },
+    updateMessageStatus: (
+      state,
+      action: PayloadAction<{ messageId: string; status: boolean }>
+    ) => {
+      const { messageId, status } = action.payload;
+      const message = state.messages.find((msg) => msg._id === messageId);
+      if (message) {
+        message.read = status;
+      }
+    },
   },
 });
 
@@ -63,6 +73,7 @@ export const {
   setActiveChat,
   addMessage,
   setMessages,
+  updateMessageStatus,
   updateTypingStatus,
   updateUserStatus,
 } = chatSlice.actions;

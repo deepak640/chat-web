@@ -13,6 +13,7 @@ import { RootState } from "@/store/store";
 import { useGetChats, useGetUsers } from "@/services/chat.service";
 import { setChats, setUsers, setActiveChat } from "@/store/slices/chatSlice";
 import { useGetUserList } from "@/services/user.service";
+import { useSocket } from "@/hooks/useScoket";
 
 interface ChatSidebarProps {
   onShowProfile: (userId: string) => void;
@@ -23,7 +24,6 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const { activeChat } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: users } = useGetUserList({ userId: user._id });
-
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateChat, setShowCreateChat] = useState(false);
@@ -31,6 +31,10 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const { data: chats } = useGetChats();
   const chatsData = null;
   const { data: usersData } = useGetUsers();
+
+  const handleClickChat = (chat: any) => {
+    dispatch(setActiveChat(chat));
+  };
 
   useEffect(() => {
     if (chatsData) {
@@ -61,7 +65,8 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const getChatName = (chat: any) => {
     if (chat.type === "group") return chat.userName;
     const otherUser = users.find(
-      (u: any) => chat.participants?.includes(u._id) && u._id !== currentUser?._id
+      (u: any) =>
+        chat.participants?.includes(u._id) && u._id !== currentUser?._id
     );
     return otherUser?.name || "Unknown";
   };
@@ -69,7 +74,8 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const getChatAvatar = (chat: any) => {
     if (chat.type === "group") return chat.photo;
     const otherUser = users.find(
-      (u: any) => chat.participants?.includes(u._id) && u._id !== currentUser?._id
+      (u: any) =>
+        chat.participants?.includes(u._id) && u._id !== currentUser?._id
     );
     return otherUser?.photo;
   };
@@ -121,7 +127,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
                 {filteredChats.map((chat: any) => (
                   <button
                     key={chat._id}
-                    onClick={() => dispatch(setActiveChat(chat))}
+                    onClick={() => handleClickChat(chat)}
                     className={cn(
                       "w-full p-3 rounded-lg text-left hover:bg-secondary/50 transition-colors",
                       activeChat?._id === chat._id && "bg-secondary"

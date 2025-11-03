@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useGetUserList } from "@/services/user.service";
 import { useSocket } from "@/hooks/useScoket";
 import { RootState } from "@/store/store";
-import { useGetChats, useGetConversationById } from "@/services/chat.service";
+import { useGetConversationById } from "@/services/chat.service";
 import { setMessages } from "@/store/slices/chatSlice";
 
 // === Types ===
@@ -66,6 +66,9 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     if (messagesHistory && messagesHistory.length > 0) {
       dispatch(setMessages(messagesHistory));
     }
+    socket.current?.emit("message-seen", {
+      conversationId: activeChat?._id,
+    });
   }, [messagesHistory]);
 
   const handleSend = () => {
@@ -90,6 +93,11 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       });
     }
 
+    if (userStatus?.status && userStatus.userId === currentUser?._id) {
+      socket.current?.emit("message-seen", {
+        conversationId: activeChat?._id,
+      });
+    }
     setMessage("");
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -139,9 +147,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         <button
           onClick={() => {
             const otherUserId = getOtherUserId();
-            console.log("🚀 ------------------------------------------🚀");
-            console.log("🚀 ~ ChatWindow ~ otherUserId:", otherUserId);
-            console.log("🚀 ------------------------------------------🚀");
             if (otherUserId) onShowProfile(otherUserId);
           }}
           className="flex items-center gap-3 hover:bg-secondary/50 rounded-lg p-2 -ml-2 transition-colors"
@@ -154,7 +159,9 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
           <div className="text-left">
             <h3 className="font-semibold">{currentUser?.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {userStatus?.status ? "Online" : "Offline"}
+              {userStatus?.status && userStatus.userId === currentUser?._id
+                ? "Online"
+                : "Offline"}
             </p>
           </div>
         </button>

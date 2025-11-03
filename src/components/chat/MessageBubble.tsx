@@ -1,8 +1,8 @@
-import { Message, User } from '@/types/chat';
-import { format } from 'date-fns';
-import { Check, CheckCheck, Download } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Message, User } from "@/types/chat";
+import { format } from "date-fns";
+import { Check, CheckCheck, Download } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface MessageBubbleProps {
   message: Message;
@@ -11,7 +11,12 @@ interface MessageBubbleProps {
   sender?: Partial<User>;
 }
 
-const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProps) => {
+const MessageBubble = ({
+  message,
+  isOwn,
+  showAvatar,
+  sender,
+}: MessageBubbleProps) => {
   return (
     <div className={cn("flex gap-2", isOwn ? "justify-end" : "justify-start")}>
       {!isOwn && showAvatar && (
@@ -48,27 +53,28 @@ const MessageBubble = ({ message, isOwn, showAvatar, sender }: MessageBubbleProp
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8"
-                onClick={() => window.open(message.fileUrl, '_blank')}
+                onClick={() => window.open(message.fileUrl, "_blank")}
               >
                 <Download className="w-4 h-4" />
               </Button>
             </div>
           )}
 
-          <div className={cn(
-            "flex items-center gap-1 mt-1",
-            isOwn ? "justify-end" : "justify-start"
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-1 mt-1",
+              isOwn ? "justify-end" : "justify-start"
+            )}
+          >
             <span className="text-xs opacity-70">
-              {format(message.timestamp, 'HH:mm')}
+              {format(message.timestamp, "HH:mm")}
             </span>
-            {isOwn && (
-              message.read ? (
+            {isOwn &&
+              (message.read ? (
                 <CheckCheck className="w-4 h-4 opacity-70" />
               ) : (
                 <Check className="w-4 h-4 opacity-70" />
-              )
-            )}
+              ))}
           </div>
         </div>
       </div>
