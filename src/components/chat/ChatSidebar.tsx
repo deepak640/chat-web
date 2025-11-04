@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquarePlus, Search, Users } from "lucide-react";
+import { MessageSquarePlus, Search, User, Users } from "lucide-react";
 import { format } from "date-fns";
 import CreateChatDialog from "./CreateChatDialog";
 import { cn } from "@/lib/utils";
@@ -135,11 +135,21 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative">
-                        <img
-                          src={getChatAvatar(chat)}
-                          alt={getChatName(chat)}
-                          className="w-12 h-12 rounded-full"
-                        />
+                        {getChatAvatar(chat) ? (
+                          <img
+                            src={getChatAvatar(chat)}
+                            alt={getChatName(chat)}
+                            className="w-12 h-12 rounded-full"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium">
+                            {currentUser?.email ? (
+                              currentUser.email.charAt(0).toUpperCase()
+                            ) : (
+                              <User className="w-4 h-4" />
+                            )}
+                          </div>
+                        )}
                         {chat.type === "direct" && (
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-online border-2 border-card rounded-full" />
                         )}

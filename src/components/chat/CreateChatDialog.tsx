@@ -17,6 +17,7 @@ import { RootState } from "@/store/store";
 import { useCreateChat } from "@/services/chat.service";
 import { useGetUserList } from "@/services/user.service";
 import { setActiveChat } from "@/store/slices/chatSlice";
+import { User } from "lucide-react";
 
 interface CreateChatDialogProps {
   open: boolean;
@@ -99,11 +100,21 @@ const CreateChatDialog = ({ open, onOpenChange }: CreateChatDialogProps) => {
                         checked={selectedUsers.includes(user._id)}
                         onCheckedChange={() => toggleUser(user._id)}
                       />
-                      <img
-                        src={user.photo}
-                        alt={user.name}
-                        className="w-10 h-10 rounded-full"
-                      />
+                      {user.photo ? (
+                        <img
+                          src={user.photo}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium">
+                          {user?.email ? (
+                            user.email.charAt(0).toUpperCase()
+                          ) : (
+                            <User className="w-4 h-4" />
+                          )}
+                        </div>
+                      )}
                       <div className="flex-1">
                         <p className="font-medium">{user.name}</p>
                         <p className="text-sm text-muted-foreground">

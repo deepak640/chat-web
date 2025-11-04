@@ -103,12 +103,20 @@ const ChatHeader = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <img
-                  src={currentUser?.photo}
-                  alt={currentUser?.name}
-                  className="w-8 h-8 rounded-full"
-                />
+              <Button variant="ghost" size="icon" className="p-0">
+                {currentUser?.photo ? (
+                  <img
+                    src={currentUser.photo}
+                    alt={currentUser.name ?? "Avatar"}
+                    className="w-8 h-8 rounded-full"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium">
+                    {currentUser?.email
+                      ? currentUser.email.charAt(0).toUpperCase()
+                      : <User className="w-4 h-4" />}
+                  </div>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

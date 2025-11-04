@@ -44,7 +44,7 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: register,
     onSuccess: (data) => {
-      dispatch(loginAction(data));
+      window.location.reload();
     },
   });
 };

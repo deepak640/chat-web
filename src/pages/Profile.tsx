@@ -108,11 +108,22 @@ const Profile = () => {
               <div className="flex justify-center mb-6">
                 <div className="relative">
                   <label htmlFor="avatar-upload" className="cursor-pointer">
-                    <img
-                      src={formData.photoURL ?? formData.photo}
-                      alt={formData.name}
-                      className="w-32 h-32 rounded-full"
-                    />
+                    {formData.photoURL ? (
+                      <img
+                        src={formData.photoURL}
+                        alt={formData.name || "Avatar"}
+                        className="w-32 h-32 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-7xl font-medium text-white">
+                        {(formData.email
+                          ? formData.email.charAt(0)
+                          : formData.name
+                          ? formData.name.charAt(0)
+                          : ""
+                        ).toUpperCase()}
+                      </div>
+                    )}
                   </label>
                   <Input
                     id="avatar-upload"
