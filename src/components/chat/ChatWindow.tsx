@@ -9,6 +9,7 @@ import {
   Trash2,
   LogOut,
   Info,
+  User,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,7 +20,7 @@ import {
 import MessageBubble from "./MessageBubble";
 import { Message } from "@/types/chat";
 import { useDispatch, useSelector } from "react-redux";
-import { useGetUserList } from "@/services/user.service";
+import { useGetUserById, useGetUserList } from "@/services/user.service";
 import { useSocket } from "@/hooks/useScoket";
 import { RootState } from "@/store/store";
 import { useGetConversationById } from "@/services/chat.service";
@@ -34,16 +35,18 @@ interface ChatWindowProps {
 // === Component ===
 const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const dispatch = useDispatch();
-  const { data: user } = useGetUserList({});
-  const { user: userData } = useSelector((state: RootState) => state.auth);
-  const currentUser = user?.[0];
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
   const { activeChat, messages, typingStatus, userStatus } = useSelector(
     (state: RootState) => state.chat
+  );
+  const { data: otherUser } = useGetUserById(
+    activeChat?.participants.find((p: any) => p !== currentUser?._id)
   );
   const { data: messagesHistory } = useGetConversationById(activeChat?._id);
 
   const socket = useSocket({
-    userId: userData?._id,
+    userId: currentUser?._id,
     conversationId: activeChat?._id,
     dispatch,
   });
@@ -83,17 +86,17 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       socket.current.emit("sendImage", {
         imageUrl: `https://example.com/images/${selectedFile.name}`,
         conversationId: activeChat._id,
-        senderId: userData?._id,
+        senderId: currentUser?._id,
       });
     } else {
       socket.current.emit("send-message", {
         conversationId: activeChat._id,
         content: message,
-        senderId: userData?._id,
+        senderId: currentUser?._id,
       });
     }
 
-    if (userStatus?.status && userStatus.userId === currentUser?._id) {
+    if (userStatus?.status && userStatus.userId === otherUser?._id) {
       socket.current?.emit("message-seen", {
         conversationId: activeChat?._id,
       });
@@ -118,7 +121,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const getOtherUserId = (): string | null => {
     if (!activeChat || activeChat.type === "group") return null;
     return (
-      activeChat.participants.find((p: any) => p._id !== currentUser?._id) ||
+      activeChat.participants.find((p: any) => p._id !== otherUser?._id) ||
       null
     );
   };
@@ -151,15 +154,25 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
           }}
           className="flex items-center gap-3 hover:bg-secondary/50 rounded-lg p-2 -ml-2 transition-colors"
         >
-          <img
-            src={currentUser?.photo || "https://i.pravatar.cc/40?img=3"}
-            alt={currentUser?.name}
-            className="w-10 h-10 rounded-full object-cover"
-          />
+          {otherUser?.photo ? (
+            <img
+              src={otherUser?.photo || "https://i.pravatar.cc/40?img=3"}
+              alt={otherUser?.name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium">
+              {otherUser?.email ? (
+                otherUser.email.charAt(0).toUpperCase()
+              ) : (
+                <User className="w-4 h-4" />
+              )}
+            </div>
+          )}
           <div className="text-left">
-            <h3 className="font-semibold">{currentUser?.name}</h3>
+            <h3 className="font-semibold">{otherUser?.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {userStatus?.status && userStatus.userId === currentUser?._id
+              {userStatus?.status && userStatus.userId === otherUser?._id
                 ? "Online"
                 : "Offline"}
             </p>
@@ -210,7 +223,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                 key={idx}
                 message={msg}
                 sender={msg.sender}
-                isOwn={msg.senderId === userData?._id}
+                isOwn={msg.senderId === currentUser?._id}
                 showAvatar={showAvatar}
               />
             );

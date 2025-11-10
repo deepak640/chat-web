@@ -5,6 +5,24 @@ interface TypingStatus {
   hashId: string;
   isTyping: boolean;
 }
+
+interface LastMessage {
+  timestamp: string | null;
+  [key: string]: any;
+}
+
+interface ActiveChat {
+  _id: string;
+  participants: string[];
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  __v?: number;
+  type: 'direct' | 'group' | string;
+  lastMessage?: LastMessage;
+  // reducer accesses `.messages`, include it if active chat can carry messages
+  messages?: Message[];
+}
+
 interface UserStatus {
   userId: string;
   status: boolean;
@@ -13,7 +31,7 @@ interface UserStatus {
 interface ChatState {
   chats: any[]; // Define a proper type for chats
   users: any[]; // Define a proper type for users
-  activeChat: any | null; // Define a proper type for activeChat
+  activeChat: ActiveChat | null; // Define a proper type for activeChat
   messages: Message[];
   typingStatus: TypingStatus | null;
   userStatus: UserStatus | null;

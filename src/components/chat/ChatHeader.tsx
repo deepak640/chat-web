@@ -40,7 +40,6 @@ const ChatHeader = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    console.log("User logged out");
     navigate("/auth");
   };
 

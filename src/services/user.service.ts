@@ -28,6 +28,11 @@ const getUserList = async (Obj: any) => {
   return data;
 };
 
+const getUserById = async (userId: string) => {
+  const { data } = await axios.get(`${API_BASE_URL}/${userId}`);
+  return data;
+};
+
 // Hooks
 export const useLogin = () => {
   const dispatch = useDispatch();
@@ -53,5 +58,13 @@ export const useGetUserList = (Obj: any) => {
   return useQuery({
     queryKey: ["userList", Obj],
     queryFn: () => getUserList(Obj).then((res) => res.data),
+  });
+};
+
+export const useGetUserById = (userId: string) => {
+  return useQuery({
+    queryKey: ["userById", userId],
+    queryFn: () => getUserById(userId).then((res) => res.data),
+    enabled: !!userId,
   });
 };

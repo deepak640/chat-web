@@ -42,9 +42,6 @@ export const useSocket = ({
         dispatch(updateUserStatus(data));
       });
       socketRef.current.on("message-seen-update", (data) => {
-        console.log("🚀 ---------------------------🚀")
-        console.log("🚀 ~ useSocket ~ data:", data)
-        console.log("🚀 ---------------------------🚀")
         dispatch(
           updateMessageStatus({ messageId: data.messageId, status: data.seen })
         );
