@@ -34,27 +34,27 @@ interface ChatWindowProps {
 
 // === Component ===
 const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
-  const dispatch = useDispatch();
-  const { user: currentUser } = useSelector((state: RootState) => state.auth);
-
   const { activeChat, messages, typingStatus, userStatus } = useSelector(
     (state: RootState) => state.chat
   );
+  const dispatch = useDispatch();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+
   const { data: otherUser } = useGetUserById(
     activeChat?.participants.find((p: any) => p !== currentUser?._id)
   );
-  const { data: messagesHistory } = useGetConversationById(activeChat?._id);
+
+  const [message, setMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const socket = useSocket({
     userId: currentUser?._id,
     conversationId: activeChat?._id,
     dispatch,
   });
-
-  const [message, setMessage] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: messagesHistory } = useGetConversationById(activeChat?._id);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -67,6 +67,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   useEffect(() => {
     if (messagesHistory && messagesHistory.length > 0) {
+      console.log("🚀 ~ ChatWindow ~ messagesHistory:", messagesHistory);
       dispatch(setMessages(messagesHistory));
     }
     socket.current?.emit("message-seen", {
@@ -121,8 +122,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const getOtherUserId = (): string | null => {
     if (!activeChat || activeChat.type === "group") return null;
     return (
-      activeChat.participants.find((p: any) => p._id !== otherUser?._id) ||
-      null
+      activeChat.participants.find((p: any) => p._id !== otherUser?._id) || null
     );
   };
 

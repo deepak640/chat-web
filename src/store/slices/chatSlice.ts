@@ -17,7 +17,7 @@ interface ActiveChat {
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   __v?: number;
-  type: 'direct' | 'group' | string;
+  type: "direct" | "group" | string;
   lastMessage?: LastMessage;
   // reducer accesses `.messages`, include it if active chat can carry messages
   messages?: Message[];
@@ -33,6 +33,7 @@ interface ChatState {
   users: any[]; // Define a proper type for users
   activeChat: ActiveChat | null; // Define a proper type for activeChat
   messages: Message[];
+  lastMessage: LastMessage | null;
   typingStatus: TypingStatus | null;
   userStatus: UserStatus | null;
 }
@@ -40,6 +41,7 @@ interface ChatState {
 const initialState: ChatState = {
   chats: [],
   users: [],
+  lastMessage: null,
   activeChat: null,
   messages: [],
   typingStatus: null,
@@ -69,6 +71,9 @@ const chatSlice = createSlice({
     updateTypingStatus: (state, action: PayloadAction<TypingStatus>) => {
       state.typingStatus = action.payload;
     },
+    setLastMessage: (state, action: PayloadAction<LastMessage>) => {
+      state.lastMessage = action.payload;
+    },
     updateUserStatus: (state, action: PayloadAction<UserStatus>) => {
       state.userStatus = action.payload;
     },
@@ -90,6 +95,7 @@ export const {
   setUsers,
   setActiveChat,
   addMessage,
+  setLastMessage,
   setMessages,
   updateMessageStatus,
   updateTypingStatus,

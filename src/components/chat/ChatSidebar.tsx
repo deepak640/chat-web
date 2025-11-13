@@ -11,7 +11,12 @@ import { cn } from "@/lib/utils";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { useGetChats, useGetUsers } from "@/services/chat.service";
-import { setChats, setUsers, setActiveChat } from "@/store/slices/chatSlice";
+import {
+  setChats,
+  setUsers,
+  setActiveChat,
+  setMessages,
+} from "@/store/slices/chatSlice";
 import { useGetUserList } from "@/services/user.service";
 import { useSocket } from "@/hooks/useScoket";
 
@@ -22,6 +27,7 @@ interface ChatSidebarProps {
 const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const dispatch = useDispatch();
   const { activeChat } = useSelector((state: RootState) => state.chat);
+  const { lastMessage } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: users } = useGetUserList({ userId: user._id });
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
@@ -29,18 +35,12 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const [showCreateChat, setShowCreateChat] = useState(false);
 
   const { data: chats } = useGetChats();
-  const chatsData = null;
   const { data: usersData } = useGetUsers();
 
   const handleClickChat = (chat: any) => {
     dispatch(setActiveChat(chat));
+    dispatch(setMessages([]));
   };
-
-  useEffect(() => {
-    if (chatsData) {
-      dispatch(setChats(chatsData));
-    }
-  }, [chatsData, dispatch]);
 
   useEffect(() => {
     if (usersData) {
@@ -57,6 +57,9 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
         return chatName.toLowerCase().includes(searchQuery.toLowerCase());
       })
     : [];
+  console.log("🚀 -----------------------------------------------🚀")
+  console.log("🚀 ~ ChatSidebar ~ filteredChats:", filteredChats)
+  console.log("🚀 -----------------------------------------------🚀")
 
   const filteredUsers = users?.filter((user: any) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -81,7 +84,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   };
 
   const getLastMessagePreview = (chat: any) => {
-    const lastMsg = chat.lastMessage;
+    const lastMsg = lastMessage ?? chat.lastMessage;
     if (!lastMsg) return "No messages yet";
     if (lastMsg.fileName) return `📎 ${lastMsg.fileName}`;
     return lastMsg.content;
@@ -163,7 +166,10 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
                           {chat.lastMessage && (
                             <span className="text-xs text-muted-foreground">
                               {format(
-                                new Date(chat.lastMessage.timestamp),
+                                new Date(
+                                  lastMessage?.timestamp ??
+                                    chat.lastMessage.timestamp
+                                ),
                                 "HH:mm"
                               )}
                             </span>

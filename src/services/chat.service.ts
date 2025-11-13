@@ -9,10 +9,7 @@ const auth = {
 };
 
 const getChats = async () => {
-  const { data } = await axios.get(
-    `${API_BASE_URL}/conversations/chats`,
-    auth
-  );
+  const { data } = await axios.get(`${API_BASE_URL}/conversations/chats`, auth);
   return data;
 };
 
@@ -34,15 +31,20 @@ const createChat = async (chatData: {
   return data;
 };
 
-
 const getConversationsById = async (conversationId: string) => {
+  console.log(
+    "🚀 ----------------------------------------------------------🚀"
+  );
+  console.log("🚀 ~ getConversationsById ~ conversationId:", conversationId);
+  console.log(
+    "🚀 ----------------------------------------------------------🚀"
+  );
   const { data } = await axios.get(
     `${API_BASE_URL}/messages/${conversationId}`,
     auth
   );
   return data;
-}
-
+};
 
 export const useGetChats = () => {
   return useQuery({

@@ -1,6 +1,7 @@
 import { SOCKET_URL } from "@/services/url.service";
 import {
   addMessage,
+  setLastMessage,
   updateMessageStatus,
   updateTypingStatus,
   updateUserStatus,
@@ -45,6 +46,9 @@ export const useSocket = ({
         dispatch(
           updateMessageStatus({ messageId: data.messageId, status: data.seen })
         );
+      });
+      socketRef.current.on("last-message", (data) => {
+      dispatch(setLastMessage(data));
       });
     }
     return () => {

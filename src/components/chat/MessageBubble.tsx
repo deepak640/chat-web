@@ -17,9 +17,6 @@ const MessageBubble = ({
   showAvatar,
   sender,
 }: MessageBubbleProps) => {
-  console.log("🚀 ---------------------🚀");
-  console.log("🚀 ~ message:", message);
-  console.log("🚀 ---------------------🚀");
   return (
     <div className={cn("flex gap-2", isOwn ? "justify-end" : "justify-start")}>
       {!isOwn && showAvatar && (
