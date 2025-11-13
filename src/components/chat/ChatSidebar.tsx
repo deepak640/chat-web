@@ -30,6 +30,10 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const { lastMessage } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: users } = useGetUserList({ userId: user._id });
+  const { unreadCount } = useSelector((state: RootState) => state.chat);
+  console.log("🚀 -------------------------------------------🚀");
+  console.log("🚀 ~ ChatSidebar ~ unreadCount:", lastMessage);
+  console.log("🚀 -------------------------------------------🚀");
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateChat, setShowCreateChat] = useState(false);
@@ -49,17 +53,32 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   }, [usersData, dispatch]);
 
   const filteredChats = chats
-    ? chats?.filter((chat: any) => {
-        const chatName =
-          chat.userName ||
-          users.find((u: any) => chat?.participants?.includes(u._id))?.name ||
-          "";
-        return chatName.toLowerCase().includes(searchQuery.toLowerCase());
-      })
+    ? chats
+        .map((chat: any) => {
+          // clone chat and, if there's a global lastMessage for this chat, override chat.lastMessage
+          const updated = { ...chat };
+          console.log(
+            "🚀 ~ ChatSidebar ~ chat:",
+            chat?._id,
+            lastMessage?.conversationId
+          );
+          if (lastMessage) {
+            const lastChatId = lastMessage.conversationId as string;
+            if (lastChatId === chat._id) {
+              updated.lastMessage = lastMessage;
+            }
+          }
+          return updated;
+        })
+        .filter((chat: any) => {
+          const chatName =
+            chat.userName ||
+            users?.find((u: any) => chat?.participants?.includes(u._id))
+              ?.name ||
+            "";
+          return chatName.toLowerCase().includes(searchQuery.toLowerCase());
+        })
     : [];
-  console.log("🚀 -----------------------------------------------🚀")
-  console.log("🚀 ~ ChatSidebar ~ filteredChats:", filteredChats)
-  console.log("🚀 -----------------------------------------------🚀")
 
   const filteredUsers = users?.filter((user: any) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -84,7 +103,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   };
 
   const getLastMessagePreview = (chat: any) => {
-    const lastMsg = lastMessage ?? chat.lastMessage;
+    const lastMsg = chat.lastMessage;
     if (!lastMsg) return "No messages yet";
     if (lastMsg.fileName) return `📎 ${lastMsg.fileName}`;
     return lastMsg.content;
@@ -166,10 +185,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
                           {chat.lastMessage && (
                             <span className="text-xs text-muted-foreground">
                               {format(
-                                new Date(
-                                  lastMessage?.timestamp ??
-                                    chat.lastMessage.timestamp
-                                ),
+                                new Date(chat.lastMessage.timestamp),
                                 "HH:mm"
                               )}
                             </span>

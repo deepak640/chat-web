@@ -6,8 +6,19 @@ interface TypingStatus {
   isTyping: boolean;
 }
 
+interface Sender {
+  name: string;
+  avatar: string;
+  email: string;
+  [key: string]: any;
+}
+
 interface LastMessage {
-  timestamp: string | null;
+  conversationId: string;
+  content: string;
+  senderId: string;
+  sender: Sender;
+  timestamp: string; // ISO date string
   [key: string]: any;
 }
 
@@ -33,6 +44,11 @@ interface ChatState {
   users: any[]; // Define a proper type for users
   activeChat: ActiveChat | null; // Define a proper type for activeChat
   messages: Message[];
+  unreadCount: {
+    conversationId: string;
+    unreadCount: number;
+    currentUserId: string;
+  } | null;
   lastMessage: LastMessage | null;
   typingStatus: TypingStatus | null;
   userStatus: UserStatus | null;
@@ -41,6 +57,7 @@ interface ChatState {
 const initialState: ChatState = {
   chats: [],
   users: [],
+  unreadCount: null,
   lastMessage: null,
   activeChat: null,
   messages: [],
@@ -74,6 +91,14 @@ const chatSlice = createSlice({
     setLastMessage: (state, action: PayloadAction<LastMessage>) => {
       state.lastMessage = action.payload;
     },
+    setUnreadCount: (
+      state,
+      action: PayloadAction<
+        { conversationId: string; unreadCount: number; currentUserId: string } | null
+      >
+    ) => {
+      state.unreadCount = action.payload;
+    },
     updateUserStatus: (state, action: PayloadAction<UserStatus>) => {
       state.userStatus = action.payload;
     },
@@ -94,6 +119,7 @@ export const {
   setChats,
   setUsers,
   setActiveChat,
+  setUnreadCount,
   addMessage,
   setLastMessage,
   setMessages,

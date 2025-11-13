@@ -67,11 +67,11 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   useEffect(() => {
     if (messagesHistory && messagesHistory.length > 0) {
-      console.log("🚀 ~ ChatWindow ~ messagesHistory:", messagesHistory);
       dispatch(setMessages(messagesHistory));
     }
     socket.current?.emit("message-seen", {
       conversationId: activeChat?._id,
+      currentUserId: currentUser?._id,
     });
   }, [messagesHistory]);
 

@@ -32,13 +32,6 @@ const createChat = async (chatData: {
 };
 
 const getConversationsById = async (conversationId: string) => {
-  console.log(
-    "🚀 ----------------------------------------------------------🚀"
-  );
-  console.log("🚀 ~ getConversationsById ~ conversationId:", conversationId);
-  console.log(
-    "🚀 ----------------------------------------------------------🚀"
-  );
   const { data } = await axios.get(
     `${API_BASE_URL}/messages/${conversationId}`,
     auth
