@@ -106,20 +106,26 @@ const chatSlice = createSlice({
     },
     updateMessageStatus: (
       state,
-      action: PayloadAction<{ messageIds: string[]; status: boolean }>
+      action: PayloadAction<{
+        messageIds: string[];
+        status: boolean;
+        conversationId: string;
+      }>
     ) => {
-      console.log("🚀 -----------------------------------🚀");
-      console.log("🚀 ~ action.payload:", action.payload);
-      console.log("🚀 -----------------------------------🚀");
-      const { messageIds, status } = action.payload;
-      state.messages = state.messages.map((msg) =>
-        messageIds.includes(msg._id)
-          ? {
-              ...msg,
-              read: status,
-            }
-          : msg
-      );
+      const { messageIds, status, conversationId } = action.payload;
+
+      // ❗ FIX: Only update when the user is viewing THIS conversation
+      if (!state.activeChat || state.activeChat._id !== conversationId) {
+        return; // ignore update for other conversations
+      }
+      console.log(state.messages.map(msg => msg._id), messageIds);
+      // state.messages = state.messages.map((msg) => ({ ...msg, read: status }));
+      state.messages = state.messages.map((msg) => {
+        if (messageIds.includes(msg._id)) {
+          return { ...msg, read: status };
+        }
+        return msg;
+      });
     },
   },
 });

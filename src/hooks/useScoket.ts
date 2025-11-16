@@ -42,9 +42,9 @@ export const useSocket = ({
       });
       socketRef.current.on("user-status", (data) => {
         dispatch(updateUserStatus(data));
-        dispatch(updateMessageStatus(data.messageSeen));
       });
       socketRef.current.on("message-seen", (data) => {
+        dispatch(updateMessageStatus(data));
       });
       socketRef.current.on("unread-count-update", (data) => {
         dispatch(setUnreadCount(data));
