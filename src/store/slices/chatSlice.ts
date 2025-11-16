@@ -118,7 +118,10 @@ const chatSlice = createSlice({
       if (!state.activeChat || state.activeChat._id !== conversationId) {
         return; // ignore update for other conversations
       }
-      console.log(state.messages.map(msg => msg._id), messageIds);
+      console.log(
+        state.messages.map((msg) => msg._id),
+        messageIds
+      );
       // state.messages = state.messages.map((msg) => ({ ...msg, read: status }));
       state.messages = state.messages.map((msg) => {
         if (messageIds.includes(msg._id)) {
