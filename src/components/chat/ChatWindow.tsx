@@ -21,7 +21,7 @@ import MessageBubble from "./MessageBubble";
 import { Message } from "@/types/chat";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetUserById, useGetUserList } from "@/services/user.service";
-import { useSocket } from "@/hooks/useScoket";
+import { useSocket } from "@/hooks/useSocket";
 import { RootState } from "@/store/store";
 import { useGetConversationById } from "@/services/chat.service";
 import { setMessages } from "@/store/slices/chatSlice";

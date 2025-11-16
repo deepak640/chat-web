@@ -18,7 +18,7 @@ import {
   setMessages,
 } from "@/store/slices/chatSlice";
 import { useGetUserList } from "@/services/user.service";
-import { useSocket } from "@/hooks/useScoket";
+import { useSocket } from "@/hooks/useSocket";
 
 interface ChatSidebarProps {
   onShowProfile: (userId: string) => void;
