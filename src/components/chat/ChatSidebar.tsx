@@ -31,9 +31,6 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: users } = useGetUserList({ userId: user._id });
   const { unreadCount } = useSelector((state: RootState) => state.chat);
-  console.log("🚀 -------------------------------------------🚀");
-  console.log("🚀 ~ ChatSidebar ~ unreadCount:", lastMessage);
-  console.log("🚀 -------------------------------------------🚀");
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateChat, setShowCreateChat] = useState(false);
@@ -57,11 +54,6 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
         .map((chat: any) => {
           // clone chat and, if there's a global lastMessage for this chat, override chat.lastMessage
           const updated = { ...chat };
-          console.log(
-            "🚀 ~ ChatSidebar ~ chat:",
-            chat?._id,
-            lastMessage?.conversationId
-          );
           if (lastMessage) {
             const lastChatId = lastMessage.conversationId as string;
             if (lastChatId === chat._id) {

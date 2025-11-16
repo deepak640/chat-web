@@ -93,9 +93,11 @@ const chatSlice = createSlice({
     },
     setUnreadCount: (
       state,
-      action: PayloadAction<
-        { conversationId: string; unreadCount: number; currentUserId: string } | null
-      >
+      action: PayloadAction<{
+        conversationId: string;
+        unreadCount: number;
+        currentUserId: string;
+      } | null>
     ) => {
       state.unreadCount = action.payload;
     },
@@ -104,13 +106,20 @@ const chatSlice = createSlice({
     },
     updateMessageStatus: (
       state,
-      action: PayloadAction<{ messageId: string; status: boolean }>
+      action: PayloadAction<{ messageIds: string[]; status: boolean }>
     ) => {
-      const { messageId, status } = action.payload;
-      const message = state.messages.find((msg) => msg._id === messageId);
-      if (message) {
-        message.read = status;
-      }
+      console.log("🚀 -----------------------------------🚀");
+      console.log("🚀 ~ action.payload:", action.payload);
+      console.log("🚀 -----------------------------------🚀");
+      const { messageIds, status } = action.payload;
+      state.messages = state.messages.map((msg) =>
+        messageIds.includes(msg._id)
+          ? {
+              ...msg,
+              read: status,
+            }
+          : msg
+      );
     },
   },
 });

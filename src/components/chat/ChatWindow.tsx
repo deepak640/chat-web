@@ -69,10 +69,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     if (messagesHistory && messagesHistory.length > 0) {
       dispatch(setMessages(messagesHistory));
     }
-    socket.current?.emit("message-seen", {
-      conversationId: activeChat?._id,
-      currentUserId: currentUser?._id,
-    });
   }, [messagesHistory]);
 
   const handleSend = () => {
@@ -97,11 +93,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       });
     }
 
-    if (userStatus?.status && userStatus.userId === otherUser?._id) {
-      socket.current?.emit("message-seen", {
-        conversationId: activeChat?._id,
-      });
-    }
     setMessage("");
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
