@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Bell, MessageSquare, Search, LogOut, User } from "lucide-react";
+import {
+  Bell,
+  MessageSquare,
+  Search,
+  LogOut,
+  User,
+  Menu,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +21,11 @@ import { useNavigate } from "react-router-dom";
 import { RootState } from "@/store/store";
 import { logout } from "@/store/slices/authSlice";
 
-const ChatHeader = () => {
+interface ChatHeaderProps {
+  onSidebarOpen: () => void;
+}
+
+const ChatHeader = ({ onSidebarOpen }: ChatHeaderProps) => {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +57,14 @@ const ChatHeader = () => {
   return (
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-4 gap-4 shadow-sm">
       <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={onSidebarOpen}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
           <MessageSquare className="w-5 h-5 text-primary-foreground" />
         </div>

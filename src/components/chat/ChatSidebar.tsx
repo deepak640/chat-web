@@ -16,10 +16,12 @@ import { setUsers, setActiveChat, setMessages } from '@/store/slices/chatSlice'
 import { useGetUserList } from '@/services/user.service'
 
 interface ChatSidebarProps {
-  onShowProfile: (userId: string) => void
+  onShowProfile: (userId: string) => void;
+  isSheet?: boolean;
+  onChatSelect?: () => void;
 }
 
-const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
+const ChatSidebar = ({ onShowProfile, isSheet, onChatSelect }: ChatSidebarProps) => {
   const dispatch = useDispatch()
   const { activeChat } = useSelector((state: RootState) => state.chat)
   const { lastMessage } = useSelector((state: RootState) => state.chat)
@@ -36,6 +38,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
   const handleClickChat = (chat: ActiveChat) => {
     dispatch(setActiveChat(chat))
     dispatch(setMessages([]))
+    onChatSelect?.()
   }
 
   useEffect(() => {
@@ -102,7 +105,7 @@ const ChatSidebar = ({ onShowProfile }: ChatSidebarProps) => {
 
   return (
     <>
-      <aside className='w-full sm:w-80 lg:w-96 border-r border-border bg-card flex flex-col'>
+      <aside className={cn('w-full sm:w-80 lg:w-96 border-r border-border bg-card flex flex-col', isSheet && 'pt-12')}>
         <div className='p-4 space-y-4 border-b border-border'>
           <div className='flex items-center justify-between'>
             <h2 className='text-lg font-semibold'>Messages</h2>
