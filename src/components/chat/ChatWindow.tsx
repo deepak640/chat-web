@@ -21,7 +21,6 @@ import MessageBubble from "./MessageBubble";
 import { Message } from "@/types/chat";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetUserById, useGetUserList } from "@/services/user.service";
-import { useSocket } from "@/hooks/useSocket";
 import { RootState } from "@/store/store";
 import { useGetConversationById } from "@/services/chat.service";
 import { setMessages } from "@/store/slices/chatSlice";
@@ -49,11 +48,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const socket = useSocket({
-    userId: currentUser?._id,
-    conversationId: activeChat?._id,
-    dispatch,
-  });
   const { data: messagesHistory } = useGetConversationById(activeChat?._id);
 
   useEffect(() => {
@@ -71,22 +65,33 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     }
   }, [messagesHistory]);
 
+  useEffect(() => {
+    const socket = (window as any).socket;
+    if (!socket || !activeChat?._id) return;
+    socket.emit("join_chat", { conversationId: activeChat._id });
+
+    return () => {
+      socket.emit("leave_chat", { conversationId: activeChat._id });
+    };
+  }, [activeChat?._id]);
   const handleSend = () => {
+    const socket = (window as any).socket;
+
     if (!message.trim() && !selectedFile) return;
-    if (!activeChat || !socket.current) return;
+    // if (!activeChat || !socket.current) return;
 
     if (selectedFile) {
       // Handle file sending logic here
       // For now, let's just log it
       console.log("Sending file:", selectedFile.name);
       // Example of sending image URL
-      socket.current.emit("sendImage", {
-        imageUrl: `https://example.com/images/${selectedFile.name}`,
-        conversationId: activeChat._id,
-        senderId: currentUser?._id,
-      });
+      // socket.current.emit("sendImage", {
+      //   imageUrl: `https://example.com/images/${selectedFile.name}`,
+      //   conversationId: activeChat._id,
+      //   senderId: currentUser?._id,
+      // });
     } else {
-      socket.current.emit("send-message", {
+      socket.emit("send-message", {
         conversationId: activeChat._id,
         content: message,
         senderId: currentUser?._id,
@@ -208,7 +213,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
           {messages?.map((msg: Message, idx: number) => {
             const prevMsg = messages[idx - 1];
             const showAvatar = idx === 0 || prevMsg?.senderId !== msg.senderId;
-
             return (
               <MessageBubble
                 key={idx}
