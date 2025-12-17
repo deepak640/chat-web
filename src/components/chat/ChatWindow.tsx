@@ -24,6 +24,7 @@ import { useGetUserById, useGetUserList } from "@/services/user.service";
 import { RootState } from "@/store/store";
 import { useGetConversationById } from "@/services/chat.service";
 import { setMessages } from "@/store/slices/chatSlice";
+import moment from "moment";
 
 // === Types ===
 
@@ -33,15 +34,18 @@ interface ChatWindowProps {
 
 // === Component ===
 const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
-  const { activeChat, messages, typingStatus, userStatus } = useSelector(
+  const { activeChat, messages, typingStatus } = useSelector(
     (state: RootState) => state.chat
+  );
+  const userStatuses = useSelector(
+    (state: RootState) => state.chat.userStatuses
   );
   const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-
   const { data: otherUser } = useGetUserById(
     activeChat?.participants.find((p: any) => p !== currentUser?._id)
   );
+  const activeUserStatus = userStatuses ? userStatuses[otherUser?._id] : null;
 
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -168,9 +172,26 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
           <div className="text-left">
             <h3 className="font-semibold">{otherUser?.name}</h3>
             <p className="text-sm text-muted-foreground">
-              {userStatus?.status && userStatus.userId === otherUser?._id
+              {activeUserStatus?.status
                 ? "Online"
-                : "Offline"}
+                : (() => {
+                    const lastActive = moment(activeUserStatus?.lastActive);
+                    const now = moment();
+                    const daysDiff = now.diff(lastActive, "days");
+                    const monthsDiff = now.diff(lastActive, "months");
+
+                    if (daysDiff === 0) {
+                      return `Last seen at ${lastActive.format("h:mm A")}`;
+                    } else if (daysDiff === 1) {
+                      return `Last seen yesterday at ${lastActive.format("h:mm A")}`;
+                    } else if (monthsDiff >= 1) {
+                      return `Last seen at ${lastActive.format(
+                        "MMMM D [at] h:mm A"
+                      )}`;
+                    } else {
+                      return `Last seen ${lastActive.fromNow() || "offline"}`;
+                    }
+                  })()}
             </p>
           </div>
         </button>

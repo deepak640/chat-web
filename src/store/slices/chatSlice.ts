@@ -48,7 +48,9 @@ interface ChatState {
   unreadCounts: { [conversationId: string]: number }; // Changed from unreadCount
   lastMessage: LastMessage | null;
   typingStatus: TypingStatus | null;
-  userStatus: UserStatus | null;
+  userStatuses: {
+    [userId: string]: UserStatus;
+  };
 }
 
 const initialState: ChatState = {
@@ -59,7 +61,7 @@ const initialState: ChatState = {
   activeChat: null,
   messages: [],
   typingStatus: null,
-  userStatus: null,
+  userStatuses: {},
 };
 
 const chatSlice = createSlice({
@@ -81,6 +83,14 @@ const chatSlice = createSlice({
     },
     addMessage: (state, action: PayloadAction<Message>) => {
       state.messages.push(action.payload);
+    },
+    setOnlineUsers: (state, action: PayloadAction<string[]>) => {
+      action.payload.forEach((userId) => {
+        state.userStatuses[userId] = {
+          userId,
+          status: true,
+        };
+      });
     },
     updateTypingStatus: (state, action: PayloadAction<TypingStatus>) => {
       state.typingStatus = action.payload;
@@ -124,7 +134,8 @@ const chatSlice = createSlice({
       }
     },
     updateUserStatus: (state, action: PayloadAction<UserStatus>) => {
-      state.userStatus = action.payload;
+      const { userId } = action.payload;
+      state.userStatuses[userId] = action.payload;
     },
     updateMessageStatus: (
       state,
@@ -163,6 +174,7 @@ export const {
   updateUnreadCount,
   setUnreadCount,
   addMessage,
+  setOnlineUsers,
   setLastMessage,
   setMessages,
   updateMessageStatus,

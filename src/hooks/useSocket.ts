@@ -2,6 +2,7 @@ import { SOCKET_URL } from "@/services/url.service";
 import {
   addMessage,
   setLastMessage,
+  setOnlineUsers,
   updateMessageStatus,
   updateTypingStatus,
   updateUnreadCount,
@@ -52,6 +53,10 @@ export const useSocket = ({
 
     socketRef.current.on("global-user-status", (data) => {
       dispatch(updateUserStatus(data));
+    });
+
+    socketRef.current.on("online-users", ({ users }) => {
+      dispatch(setOnlineUsers(users));
     });
 
     socketRef.current.on("last-message", (data) => {
