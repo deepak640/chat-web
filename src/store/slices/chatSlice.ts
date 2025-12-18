@@ -141,24 +141,27 @@ const chatSlice = createSlice({
       state,
       action: PayloadAction<{
         messageIds: string[];
-        status: boolean;
+        userId: string;
         conversationId: string;
       }>
     ) => {
-      const { messageIds, status, conversationId } = action.payload;
+      const { messageIds, userId, conversationId } = action.payload;
 
-      // ❗ FIX: Only update when the user is viewing THIS conversation
+      // Update only if this conversation is open
       if (!state.activeChat || state.activeChat._id !== conversationId) {
-        return; // ignore update for other conversations
+        return;
       }
-      console.log(
-        state.messages.map((msg) => msg._id),
-        messageIds
-      );
-      // state.messages = state.messages.map((msg) => ({ ...msg, read: status }));
+
       state.messages = state.messages.map((msg) => {
-        if (messageIds.includes(msg._id)) {
-          return { ...msg, read: status };
+        // Only the sender should see read=true
+        if (
+          messageIds.includes(msg._id) &&
+          msg.senderId !== userId // receiver read it
+        ) {
+          return {
+            ...msg,
+            read: true, // ✅ DOUBLE TICK ENABLED
+          };
         }
         return msg;
       });
