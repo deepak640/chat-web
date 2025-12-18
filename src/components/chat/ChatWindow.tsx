@@ -119,13 +119,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     if (file) setSelectedFile(file);
   };
 
-  const getOtherUserId = (): string | null => {
-    if (!activeChat || activeChat.type === "group") return null;
-    return (
-      activeChat.participants.find((p: any) => p._id !== otherUser?._id) || null
-    );
-  };
-
   if (!activeChat) {
     return (
       <div className="flex-1 flex items-center justify-center bg-chat-bg">
@@ -149,8 +142,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       <div className="h-16 border-b border-border bg-card flex items-center px-4 justify-between shadow-sm">
         <button
           onClick={() => {
-            const otherUserId = getOtherUserId();
-            if (otherUserId) onShowProfile(otherUserId);
+            onShowProfile(otherUser?._id);
           }}
           className="flex items-center gap-3 hover:bg-secondary/50 rounded-lg p-2 -ml-2 transition-colors"
         >
@@ -183,7 +175,9 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                     if (daysDiff === 0) {
                       return `Last seen at ${lastActive.format("h:mm A")}`;
                     } else if (daysDiff === 1) {
-                      return `Last seen yesterday at ${lastActive.format("h:mm A")}`;
+                      return `Last seen yesterday at ${lastActive.format(
+                        "h:mm A"
+                      )}`;
                     } else if (monthsDiff >= 1) {
                       return `Last seen at ${lastActive.format(
                         "MMMM D [at] h:mm A"
@@ -206,8 +200,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 onClick={() => {
-                  const otherUserId = getOtherUserId();
-                  if (otherUserId) onShowProfile(otherUserId);
+                  onShowProfile(otherUser?._id);
                 }}
               >
                 <Info className="w-4 h-4 mr-2" />

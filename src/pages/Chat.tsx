@@ -65,12 +65,11 @@ const Chat = () => {
           </Sheet>
         )}
         <ChatWindow onShowProfile={handleShowProfile} />
-        {showProfile && (
-          <ProfilePanel
-            userId={profileUserId || currentUser.id}
-            onClose={() => setShowProfile(false)}
-          />
-        )}
+<ProfilePanel
+  userId={profileUserId || currentUser.id}
+  show={showProfile}
+  onClose={() => setShowProfile(false)}
+/>
       </div>
     </div>
   );

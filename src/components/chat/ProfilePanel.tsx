@@ -1,19 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { X, Mail, Phone, Calendar, MessageSquare, Clock } from "lucide-react";
-import { format } from "date-fns";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { useMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import { useCreateChat } from "@/services/chat.service";
+import { RootState } from "@/store/store";
+import { Calendar, Clock, Mail, MessageSquare, Phone, X } from "lucide-react";
+import { useSelector } from "react-redux";
+import { format } from "date-fns";
 
 interface ProfilePanelProps {
   userId: string;
+  show: boolean;
   onClose: () => void;
 }
 
-const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
+const ProfilePanelHeader = ({ onClose }: { onClose: () => void }) => (
+  <div className="h-16 border-b border-border flex items-center justify-between px-4">
+    <h3 className="font-semibold">Profile Info</h3>
+    <Button variant="ghost" size="icon" onClick={onClose}>
+      <X className="w-5 h-5" />
+    </Button>
+  </div>
+);
+
+const ProfilePanelContent = ({
+  userId,
+  isSheet,
+  onClose,
+}: {
+  userId: string;
+  isSheet: boolean;
+  onClose: () => void;
+}) => {
   const { users } = useSelector((state: RootState) => state.chat);
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const { mutate: createChat, isPending } = useCreateChat();
@@ -57,24 +82,33 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
   };
 
   return (
-    <div className="w-80 lg:w-96 border-l border-border bg-card flex flex-col">
-      <div className="h-16 border-b border-border flex items-center justify-between px-4">
-        <h3 className="font-semibold">Profile Info</h3>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
+    <>
+      {isSheet ? (
+        <SheetHeader className="p-4 border-b border-border">
+          <SheetTitle>Profile Info</SheetTitle>
+        </SheetHeader>
+      ) : (
+        <ProfilePanelHeader onClose={onClose} />
+      )}
 
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-6">
           {/* Avatar and Name */}
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="relative">
-              <img
-                src={user.photo}
-                alt={user.name}
-                className="w-32 h-32 rounded-full"
-              />
+              {user.photo ? (
+                <img
+                  src={user.photo}
+                  alt={user.name}
+                  className="w-32 h-32 rounded-full"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-primary/60 flex items-center justify-center">
+                  <span className="text-4xl font-semibold text-primary">
+                    {user.email?.[0]?.toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div
                 className={cn(
                   "absolute bottom-2 right-2 w-6 h-6 border-4 border-card rounded-full",
@@ -182,7 +216,37 @@ const ProfilePanel = ({ userId, onClose }: ProfilePanelProps) => {
           </div>
         </div>
       </ScrollArea>
-    </div>
+    </>
+  );
+};
+
+const ProfilePanel = ({ userId, show, onClose }: ProfilePanelProps) => {
+  const isMobile = useMobile();
+
+  if (isMobile) {
+    return (
+      <Sheet open={show} onOpenChange={onClose}>
+        <SheetContent className="p-0 w-full sm:w-80 lg:w-96 flex flex-col">
+          <ProfilePanelContent
+            userId={userId}
+            isSheet={true}
+            onClose={onClose}
+          />
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    show && (
+      <div className="w-80 lg:w-96 border-l border-border bg-card flex flex-col">
+        <ProfilePanelContent
+          userId={userId}
+          isSheet={false}
+          onClose={onClose}
+        />
+      </div>
+    )
   );
 };
 
