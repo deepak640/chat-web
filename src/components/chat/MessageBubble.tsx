@@ -1,6 +1,6 @@
 import { Message, User } from "@/types/chat";
 import { format } from "date-fns";
-import { Check, CheckCheck, Download } from "lucide-react";
+import { Check, CheckCheck, Download, FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -56,19 +56,65 @@ const MessageBubble = ({
           {message.content && <p className="text-sm">{message.content}</p>}
 
           {message.fileUrl && (
-            <div className="mt-2 flex items-center gap-2 p-2 bg-background/10 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm font-medium">{message.fileName}</p>
-                <p className="text-xs opacity-70">{message.fileType}</p>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8"
-                onClick={() => window.open(message.fileUrl, "_blank")}
-              >
-                <Download className="w-4 h-4" />
-              </Button>
+            <div className="mt-2">
+              {message.type === "image" ? (
+                <div
+                  className="rounded-lg overflow-hidden cursor-pointer"
+                  onClick={() => window.open(message.fileUrl, "_blank")}
+                >
+                  <img
+                    src={message.fileUrl}
+                    alt={message.fileName || "Image"}
+                    className="max-w-full sm:max-w-[300px] max-h-[300px] object-cover"
+                  />
+                </div>
+              ) : message.type === "video" ? (
+                <div className="rounded-lg overflow-hidden max-w-full sm:max-w-[300px]">
+                  <video
+                    src={message.fileUrl}
+                    controls
+                    className="w-full max-h-[300px]"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-background/20 rounded-lg max-w-[250px]">
+                  <div className="h-10 w-10 rounded-lg bg-background/20 flex items-center justify-center shrink-0">
+                    <FileIcon className="w-5 h-5 opacity-70" />
+                  </div>
+                  <div className="flex-1 overflow-hidden min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {message.fileName || "Attachment"}
+                    </p>
+                    {message.fileSize && (
+                      <p className="text-xs opacity-70">{message.fileSize}</p>
+                    )}
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0 hover:bg-background/20"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(message.fileUrl!);
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = message.fileName || "download";
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                      } catch (error) {
+                        console.error("Download failed:", error);
+                        window.open(message.fileUrl, "_blank");
+                      }
+                    }}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

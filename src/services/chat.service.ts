@@ -70,3 +70,15 @@ export const useGetConversationById = (conversationId: string) => {
     enabled: !!conversationId,
   });
 };
+
+export const uploadFile = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await axios.post(`${API_BASE_URL}/upload`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  return data;
+};

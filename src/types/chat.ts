@@ -14,6 +14,7 @@ export interface User {
 
 export interface Message {
   _id: string;
+  fileSize: number;
   content: string;
   sender: {
     name: string;
@@ -23,6 +24,7 @@ export interface Message {
   senderId: string;
   timestamp: Date;
   read: boolean;
+  type?: "text" | "image" | "video" | "audio" | "file";
   fileUrl?: string;
   fileName?: string;
   fileType?: string;

@@ -10,6 +10,9 @@ import {
   LogOut,
   Info,
   User,
+  Loader2,
+  FileIcon,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -21,10 +24,12 @@ import MessageBubble from "./MessageBubble";
 import { Message } from "@/types/chat";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetUserById, useGetUserList } from "@/services/user.service";
+import { uploadFile } from "@/services/chat.service";
 import { RootState } from "@/store/store";
 import { useGetConversationById } from "@/services/chat.service";
 import { setMessages } from "@/store/slices/chatSlice";
 import moment from "moment";
+import { useToast } from "@/components/ui/use-toast";
 
 // === Types ===
 
@@ -34,6 +39,7 @@ interface ChatWindowProps {
 
 // === Component ===
 const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
+  const { toast } = useToast();
   const { activeChat, messages, typingStatus } = useSelector(
     (state: RootState) => state.chat
   );
@@ -49,6 +55,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   const [message, setMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollBottomRef = useRef<HTMLDivElement>(null);
@@ -91,29 +98,43 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       socket.emit("leave_chat", { conversationId: activeChat._id });
     };
   }, [activeChat?._id]);
-  const handleSend = () => {
+  const handleSend = async () => {
     const socket = (window as any).socket;
 
-    if (!message.trim() && !selectedFile) return;
-    // if (!activeChat || !socket.current) return;
+    if ((!message.trim() && !selectedFile) || isUploading) return;
+
+    let fileData = {};
 
     if (selectedFile) {
-      // Handle file sending logic here
-      // For now, let's just log it
-      console.log("Sending file:", selectedFile.name);
-      // Example of sending image URL
-      // socket.current.emit("sendImage", {
-      //   imageUrl: `https://example.com/images/${selectedFile.name}`,
-      //   conversationId: activeChat._id,
-      //   senderId: currentUser?._id,
-      // });
-    } else {
-      socket.emit("send-message", {
-        conversationId: activeChat._id,
-        content: message,
-        senderId: currentUser?._id,
-      });
+      setIsUploading(true);
+      try {
+        const result = await uploadFile(selectedFile);
+        
+        let type = "file";
+        if (selectedFile.type.startsWith("image/")) type = "image";
+        else if (selectedFile.type.startsWith("video/")) type = "video";
+        else if (selectedFile.type.startsWith("audio/")) type = "audio";
+
+        fileData = {
+          fileUrl: result.url,
+          fileName: selectedFile.name,
+          fileSize: (selectedFile.size / 1024).toFixed(2) + " KB",
+          type,
+        };
+      } catch (error) {
+        console.error("File upload failed:", error);
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
     }
+
+    socket.emit("send-message", {
+      conversationId: activeChat._id,
+      content: message,
+      senderId: currentUser?._id,
+      ...fileData,
+    });
 
     setMessage("");
     setSelectedFile(null);
@@ -129,7 +150,18 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setSelectedFile(file);
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select a file smaller than 50MB",
+          variant: "destructive",
+        });
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+      setSelectedFile(file);
+    }
   };
 
   if (!activeChat) {
@@ -262,19 +294,49 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       {/* Input Area */}
       <div className="border-t border-border bg-card p-4">
         {selectedFile && (
-          <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-            <Paperclip className="w-4 h-4" />
-            <span>{selectedFile.name}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSelectedFile(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-            >
-              Remove
-            </Button>
+          <div className="mb-4 relative inline-block group">
+            <div className="relative rounded-xl overflow-hidden border border-border bg-background/50">
+              {selectedFile.type.startsWith("image/") ? (
+                <div className="relative h-32 w-32">
+                  <img
+                    src={URL.createObjectURL(selectedFile)}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : selectedFile.type.startsWith("video/") ? (
+                <div className="h-32 w-32 bg-black/5 flex items-center justify-center">
+                  <video
+                    src={URL.createObjectURL(selectedFile)}
+                    className="h-full w-full object-cover"
+                    muted
+                  />
+                </div>
+              ) : (
+                <div className="h-20 w-48 flex items-center gap-3 p-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <FileIcon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="text-sm font-medium truncate">
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  setSelectedFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -289,6 +351,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             variant="ghost"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
           >
             <Paperclip className="w-5 h-5" />
           </Button>
@@ -299,14 +362,19 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             className="flex-1"
+            disabled={isUploading}
           />
 
           <Button
             onClick={handleSend}
             size="icon"
-            disabled={!message.trim() && !selectedFile}
+            disabled={(!message.trim() && !selectedFile) || isUploading}
           >
-            <Send className="w-5 h-5" />
+            {isUploading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
           </Button>
         </div>
       </div>
