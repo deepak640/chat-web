@@ -51,17 +51,30 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollBottomRef = useRef<HTMLDivElement>(null);
+  const lastChatIdRef = useRef<string | null>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
 
   const { data: messagesHistory } = useGetConversationById(activeChat?._id);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!messages || messages.length === 0 || !scrollBottomRef.current) return;
+
+    const lastMsg = messages[messages.length - 1];
+    const isNewChat = activeChat?._id !== lastChatIdRef.current;
+    const isNewBottomMessage = lastMsg._id !== lastMessageIdRef.current;
+
+    if (isNewChat) {
+      scrollBottomRef.current.scrollIntoView({ behavior: "auto" });
+      lastChatIdRef.current = activeChat?._id;
+      lastMessageIdRef.current = lastMsg._id;
+    } else if (isNewBottomMessage) {
+      if (lastMsg.senderId === currentUser?._id) {
+        scrollBottomRef.current.scrollIntoView({ behavior: "smooth" });
       }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [messages]);
+      lastMessageIdRef.current = lastMsg._id;
+    }
+  }, [messages, activeChat, currentUser]);
 
   useEffect(() => {
     if (messagesHistory && messagesHistory.length > 0) {
@@ -242,6 +255,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
               {typingStatus.hashId} is typing...
             </div>
           )}
+          <div ref={scrollBottomRef} />
         </div>
       </ScrollArea>
 
