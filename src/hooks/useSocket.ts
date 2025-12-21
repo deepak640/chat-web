@@ -8,6 +8,7 @@ import {
   updateUnreadCount,
   updateUserStatus,
 } from "@/store/slices/chatSlice";
+import { clearPeer, getPeer } from "@/webrtc/peer.state";
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -65,6 +66,26 @@ export const useSocket = ({
     socketRef.current.on("unread-count-update", (data) => {
       dispatch(updateUnreadCount(data));
     });
+
+    // Video calling handlers can be added here
+    socketRef.current.on("incoming-call", ({ fromUserId, offer }) => {
+      // show incoming call UI
+    });
+
+    socketRef.current.on("call-accepted", async ({ answer }) => {
+      const peer = getPeer();
+      await peer.setRemoteDescription(answer);
+    });
+
+    socketRef.current.on("ice-candidate", async ({ candidate }) => {
+      const peer = getPeer();
+      await peer.addIceCandidate(candidate);
+    });
+
+    socketRef.current.on("call-ended", () => {
+      clearPeer();
+    });
+
     return () => {
       socketRef.current?.disconnect();
       socketRef.current = null;

@@ -13,6 +13,8 @@ import {
   Loader2,
   FileIcon,
   X,
+  Phone,
+  Video,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -21,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import MessageBubble from "./MessageBubble";
+import CallOverlay from "./CallOverlay";
 import { Message } from "@/types/chat";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetUserById, useGetUserList } from "@/services/user.service";
@@ -61,6 +64,10 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const scrollBottomRef = useRef<HTMLDivElement>(null);
   const lastChatIdRef = useRef<string | null>(null);
   const lastMessageIdRef = useRef<string | null>(null);
+
+  // Call State
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [callType, setCallType] = useState<"audio" | "video">("audio");
 
   const { data: messagesHistory } = useGetConversationById(activeChat?._id);
 
@@ -109,7 +116,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       setIsUploading(true);
       try {
         const result = await uploadFile(selectedFile);
-        
+
         let type = "file";
         if (selectedFile.type.startsWith("image/")) type = "image";
         else if (selectedFile.type.startsWith("video/")) type = "video";
@@ -182,7 +189,16 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-chat-bg">
+    <div className="flex-1 flex flex-col bg-chat-bg relative">
+      <CallOverlay
+        isOpen={isCallActive}
+        onClose={() => setIsCallActive(false)}
+        callType={callType}
+        remoteUser={{
+          name: otherUser?.name || "User",
+          image: otherUser?.photo,
+        }}
+      />
       {/* Header */}
       <div className="h-16 border-b border-border bg-card flex items-center px-4 justify-between shadow-sm">
         <button
@@ -236,6 +252,26 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         </button>
 
         <div className="flex items-center gap-2">
+          {/* <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setCallType("audio");
+              setIsCallActive(true);
+            }}
+          >
+            <Phone className="w-5 h-5" />
+          </Button> */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setCallType("video");
+              setIsCallActive(true);
+            }}
+          >
+            <Video className="w-5 h-5" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
