@@ -23,7 +23,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import MessageBubble from "./MessageBubble";
-import CallOverlay from "./CallOverlay";
 import { Message } from "@/types/chat";
 import { useDispatch, useSelector } from "react-redux";
 import { useGetUserById, useGetUserList } from "@/services/user.service";
@@ -33,6 +32,7 @@ import { useGetConversationById } from "@/services/chat.service";
 import { setMessages } from "@/store/slices/chatSlice";
 import moment from "moment";
 import { useToast } from "@/components/ui/use-toast";
+import { startCall } from "@/store/slices/callSlice";
 
 // === Types ===
 
@@ -64,10 +64,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const scrollBottomRef = useRef<HTMLDivElement>(null);
   const lastChatIdRef = useRef<string | null>(null);
   const lastMessageIdRef = useRef<string | null>(null);
-
-  // Call State
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [callType, setCallType] = useState<"audio" | "video">("audio");
 
   const { data: messagesHistory } = useGetConversationById(activeChat?._id);
 
@@ -190,15 +186,6 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   return (
     <div className="flex-1 flex flex-col bg-chat-bg relative">
-      <CallOverlay
-        isOpen={isCallActive}
-        onClose={() => setIsCallActive(false)}
-        callType={callType}
-        remoteUser={{
-          name: otherUser?.name || "User",
-          image: otherUser?.photo,
-        }}
-      />
       {/* Header */}
       <div className="h-16 border-b border-border bg-card flex items-center px-4 justify-between shadow-sm">
         <button
@@ -256,8 +243,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             variant="ghost"
             size="icon"
             onClick={() => {
-              setCallType("audio");
-              setIsCallActive(true);
+              dispatch(startCall({ user: otherUser, type: "audio" }));
             }}
           >
             <Phone className="w-5 h-5" />
@@ -266,8 +252,7 @@ const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             variant="ghost"
             size="icon"
             onClick={() => {
-              setCallType("video");
-              setIsCallActive(true);
+              dispatch(startCall({ user: otherUser, type: "video" }));
             }}
           >
             <Video className="w-5 h-5" />

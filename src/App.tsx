@@ -11,6 +11,7 @@ import { useSocket } from "./hooks/useSocket";
 import RedirectIfAuthenticated from "./components/common/RedirectIfAuthenticated";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "./store/store";
+import CallManager from "./components/chat/CallManager";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ const App = () => {
   useSocket({ userId: currentUser?._id, dispatch });
   return (
     <TooltipProvider>
+      <CallManager />
       <Toaster />
       <Sonner />
       <BrowserRouter>

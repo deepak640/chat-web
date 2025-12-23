@@ -8,6 +8,7 @@ import {
   updateUnreadCount,
   updateUserStatus,
 } from "@/store/slices/chatSlice";
+import { setIncomingCall, endCallSession } from "@/store/slices/callSlice";
 import { clearPeer, getPeer } from "@/webrtc/peer.state";
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
@@ -67,9 +68,9 @@ export const useSocket = ({
       dispatch(updateUnreadCount(data));
     });
 
-    // Video calling handlers can be added here
-    socketRef.current.on("incoming-call", ({ fromUserId, offer }) => {
-      // show incoming call UI
+    // WebRTC handlers
+    socketRef.current.on("incoming-call", ({ fromUser, offer }) => {
+      dispatch(setIncomingCall({ offer, fromUser }));
     });
 
     socketRef.current.on("call-accepted", async ({ answer }) => {
@@ -84,6 +85,7 @@ export const useSocket = ({
 
     socketRef.current.on("call-ended", () => {
       clearPeer();
+      dispatch(endCallSession());
     });
 
     return () => {
