@@ -2,16 +2,13 @@ import { createPeerConnection } from "./peer";
 import { setPeer } from "./peer.state";
 import { getLocalStream } from "./media";
 
-let peer: RTCPeerConnection | null = null;
-let localStream: MediaStream | null = null;
-
 export const startCall = async (socket, toUserId) => {
-  peer = createPeerConnection();
-  localStream = await getLocalStream();
+  const peer = createPeerConnection();
+  const localStream = await getLocalStream();
   setPeer(peer);
   localStream
     .getTracks()
-    .forEach((track) => peer!.addTrack(track, localStream!));
+    .forEach((track) => peer.addTrack(track, localStream!));
 
   peer.onicecandidate = (event) => {
     if (event.candidate) {
@@ -31,12 +28,21 @@ export const startCall = async (socket, toUserId) => {
 };
 
 export const acceptCall = async (socket, fromUserId, offer) => {
-  peer = createPeerConnection();
-  localStream = await getLocalStream();
+  const peer = createPeerConnection();
+  const localStream = await getLocalStream();
   setPeer(peer);
   localStream
     .getTracks()
-    .forEach((track) => peer!.addTrack(track, localStream!));
+    .forEach((track) => peer.addTrack(track, localStream!));
+
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", {
+        toUserId: fromUserId,
+        candidate: event.candidate,
+      });
+    }
+  };
 
   await peer.setRemoteDescription(offer);
   const answer = await peer.createAnswer();

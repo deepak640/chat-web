@@ -31,8 +31,13 @@ const callSlice = createSlice({
     },
     startCall: (state, action: PayloadAction<{ user: any; type: 'audio' | 'video' }>) => {
       state.isCallActive = true;
+      state.isIncomingCall = false;
       state.remoteUser = action.payload.user;
       state.callType = action.payload.type;
+    },
+    callAccepted: (state) => {
+      state.isIncomingCall = false;
+      state.isCallActive = true;
     },
     acceptIncomingCall: (state) => {
       state.isIncomingCall = false;
@@ -47,5 +52,5 @@ const callSlice = createSlice({
   },
 });
 
-export const { setIncomingCall, startCall, acceptIncomingCall, endCallSession } = callSlice.actions;
+export const { setIncomingCall, startCall, acceptIncomingCall, endCallSession, callAccepted } = callSlice.actions;
 export default callSlice.reducer;

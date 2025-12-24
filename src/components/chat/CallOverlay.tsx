@@ -23,6 +23,7 @@ interface CallOverlayProps {
   isIncoming?: boolean;
   localVideoRef?: RefObject<HTMLVideoElement>;
   remoteVideoRef?: RefObject<HTMLVideoElement>;
+  hasRemoteStream?: boolean;
 }
 
 const CallOverlay = ({
@@ -34,6 +35,7 @@ const CallOverlay = ({
   isIncoming,
   localVideoRef,
   remoteVideoRef,
+  hasRemoteStream = false,
 }: CallOverlayProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(callType === "audio");
@@ -90,8 +92,8 @@ const CallOverlay = ({
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* Overlay if video is off or incoming */}
-        {(isVideoOff || isIncoming) && (
+        {/* Overlay if video is off or incoming or connecting */}
+        {(isVideoOff || isIncoming || !hasRemoteStream) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 animate-in zoom-in-50 duration-500 z-10 bg-zinc-900/80 backdrop-blur-sm">
             <Avatar className="w-32 h-32 md:w-48 md:h-48 border-4 border-primary/20 shadow-2xl">
               <AvatarImage src={remoteUser.image} />
@@ -104,7 +106,11 @@ const CallOverlay = ({
                 {remoteUser.name}
               </h2>
               <p className="text-white/60 animate-pulse">
-                {isIncoming ? "Incoming Call..." : "Connected..."}
+                {isIncoming
+                  ? "Incoming Call..."
+                  : !hasRemoteStream
+                  ? "Calling..."
+                  : "Connected..."}
               </p>
             </div>
           </div>

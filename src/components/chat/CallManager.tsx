@@ -64,13 +64,14 @@ const CallManager = () => {
     
     try {
       const { peer, localStream: stream } = await answerCall(socket, remoteUser._id, offer);
-      setLocalStream(stream);
-      dispatch(acceptIncomingCall());
-
+      
       peer.ontrack = (event) => {
-         console.log("Remote track received (Answer)", event.streams[0]);
+        console.log("Remote track received (Answer)", event.streams[0]);
         setRemoteStream(event.streams[0]);
       };
+
+      setLocalStream(stream);
+      dispatch(acceptIncomingCall());
     } catch (error) {
       console.error("Failed to accept call", error);
       handleEndCall();
@@ -102,6 +103,7 @@ const CallManager = () => {
       isIncoming={isIncomingCall}
       localVideoRef={localVideoRef}
       remoteVideoRef={remoteVideoRef}
+      hasRemoteStream={!!remoteStream}
     />
   );
 };

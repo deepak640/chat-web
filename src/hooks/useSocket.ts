@@ -8,7 +8,7 @@ import {
   updateUnreadCount,
   updateUserStatus,
 } from "@/store/slices/chatSlice";
-import { setIncomingCall, endCallSession } from "@/store/slices/callSlice";
+import { setIncomingCall, endCallSession, callAccepted } from "@/store/slices/callSlice";
 import { clearPeer, getPeer } from "@/webrtc/peer.state";
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
@@ -69,21 +69,49 @@ export const useSocket = ({
     });
 
     // WebRTC handlers
+    const pendingCandidates: RTCIceCandidateInit[] = [];
+
     socketRef.current.on("incoming-call", ({ fromUser, offer }) => {
+      pendingCandidates.length = 0; // Clear on new call
       dispatch(setIncomingCall({ offer, fromUser }));
     });
 
     socketRef.current.on("call-accepted", async ({ answer }) => {
-      const peer = getPeer();
-      await peer.setRemoteDescription(answer);
+      console.log("Call accepted, setting remote description...");
+      dispatch(callAccepted()); // <--- Add this line to update the UI state
+      try {
+        const peer = getPeer();
+        if (peer && peer.signalingState !== "stable") {
+          await peer.setRemoteDescription(new RTCSessionDescription(answer));
+          // Process any pending candidates
+          while (pendingCandidates.length > 0) {
+            const candidate = pendingCandidates.shift();
+            if (candidate) await peer.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+        }
+      } catch (error) {
+        console.error("Error in call-accepted:", error);
+      }
     });
 
     socketRef.current.on("ice-candidate", async ({ candidate }) => {
-      const peer = getPeer();
-      await peer.addIceCandidate(candidate);
+      try {
+        const peer = getPeer();
+        if (peer && peer.remoteDescription && peer.remoteDescription.type) {
+          await peer.addIceCandidate(new RTCIceCandidate(candidate));
+        } else {
+          pendingCandidates.push(candidate);
+        }
+      } catch (error) {
+        // If peer is not initialized yet, queue it
+        if (candidate) {
+          pendingCandidates.push(candidate);
+        }
+      }
     });
 
     socketRef.current.on("call-ended", () => {
+      pendingCandidates.length = 0;
       clearPeer();
       dispatch(endCallSession());
     });
